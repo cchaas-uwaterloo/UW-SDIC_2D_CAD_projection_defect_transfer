@@ -1,0 +1,8 @@
+/home/cameron/cam_cad_proj/build/CMakeFiles/install/strip.dir
+/home/cameron/cam_cad_proj/build/CMakeFiles/install.dir
+/home/cameron/cam_cad_proj/build/CMakeFiles/list_install_components.dir
+/home/cameron/cam_cad_proj/build/CMakeFiles/rebuild_cache.dir
+/home/cameron/cam_cad_proj/build/CMakeFiles/edit_cache.dir
+/home/cameron/cam_cad_proj/build/CMakeFiles/cam_cad_proj.dir
+/home/cameron/cam_cad_proj/build/CMakeFiles/install/local.dir
+/home/cameron/cam_cad_proj/build/CMakeFiles/image_reader.dir
