@@ -16,13 +16,17 @@ pcl::visualization::PCLVisualizer::Ptr Visualizer::displayCloud(pcl::PointCloud<
 
 }
 
-// display camera points in 2D
+// display camera points in 2D plane
 void displayCameraPlane(const std::vector<point> &points_) {
   pcl::PointCloud<pcl::PointXYZ> cloud;
   for (uint16_t i = 0; i < points_.size(); i++) {
     pcl::PointXYZ o;
     o.x = points_[i].x;
+    o.y = points_[i].y;
+    o.z = 0;
+    
   }
+
 }
 // display camera and projected points in 2D with correspondences
 void displayCameraPlane(const std::vector<point> &image_points_, const std::vector<point> &projected_points_) {
