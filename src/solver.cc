@@ -16,3 +16,5 @@ bool Solver::solveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
 
     return true;
 }
+
+}

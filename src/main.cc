@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <cstdint>
 #include "imageReader.h"
+#include "~projects/libbeam/src/beam_matching/include/beam_matching/pointcloud_display.hpp"
 
 using namespace cam_cad;
 

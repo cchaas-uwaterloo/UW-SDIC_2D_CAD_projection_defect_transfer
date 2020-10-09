@@ -1,7 +1,5 @@
 // Class to read in image data from JSON files 
 
-#pragma once 
-
 #include <cstdint>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
