@@ -20,15 +20,22 @@
 
 namespace cam_cad { 
 
+enum {
+    1 : 
+}
+
 class Visualizer{
 public: 
-    Visualizer(); 
-    ~Visualizer() = default; 
+    Visualizer(std::String name_); 
+    ~Visualizer(); 
 
-    pcl::visualization::PCLVisualizer::Ptr displayCloud(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_);
+    void displayCloud(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_);
     void displayCameraPlane(const std::vector<point> &points_); 
     void displayCameraPlane(const std::vector<point> &image_points_, const std::vector<point> &projected_points_);
 
+private: 
+    uint16_t num_clouds;
+    beam_matching::PointCloudDisplay point_cloud_display;
 };
 
 

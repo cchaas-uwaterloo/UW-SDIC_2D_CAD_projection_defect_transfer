@@ -1,32 +1,79 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.13)
+project(cam_CAD_proj VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# set project name
-project(Cam_cad_proj VERSION 1.0)
+set(build_depends
+  roscpp
+  cv_bridge
+  pcl_ros
+  geometry_msgs
+)
 
-set(beam_DIR "~/catkin_ws/build/libbeam") 
-
-# find packages
-find_package(PCL 1.3 REQUIRED)
-find_package(Ceres REQUIRED)
 find_package(beam REQUIRED)
 
+find_package(catkin REQUIRED
+  COMPONENTS
+    ${build_depends}
+    image_transport
+)
 
-add_library(image_reader src/imageReader.cc visualizer src/visualizer.cc)
-
-
-include_directories(includes ${PCL_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS})
-link_directories(includes ${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
-
-
-# add executable
-add_executable(cam_cad_proj src/main.cc)
-
-target_link_libraries(cam_cad_proj image_reader ${PCL_LIBRARIES} ${CERES_LIBRARIES} beam::beam)
-
-install(TARGETS cam_cad_proj DESTINATION bin)
+find_package(Ceres REQUIRED)
+find_package(PCL REQUIRED)
 
 
+catkin_package(
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    ${PROJECT_NAME}
+  CATKIN_DEPENDS
+    ${build_depends}
+)
 
+# Core library
+add_library(${PROJECT_NAME}
+  src/main.cpp
+)
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    include
+    ${catkin_INCLUDE_DIRS}
+    
+)
+target_link_libraries(${PROJECT_NAME}
+  beam::beam
+  ${catkin_LIBRARIES}
+)
+
+##################################
+
+
+# add the main executable
+add_executable(main src/main.cc)
+add_dependencies(main ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(main ${catkin_LIBRARIES} ${PROJECT_NAME})
+
+# add the solver
+add_executable(solver src/solver.cc)
+add_dependencies(solver ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(solver ${catkin_LIBRARIES} ${PROJECT_NAME})
+
+
+# Mark executables and/or libraries for installation
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)
+
+# Mark other files for installation
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>cad_projection</name>
+  <version>0.0.1</version>
+  <description>Package to transfer geometric crack data from camera images to corresponding CAD drawings</description>
+  <author email="BEAM@beam.io">BEAM</author>
+  <maintainer email="BEAM@beam.io">BEAM</maintainer>
+  <license>BSD</license>
+  <url type="website">https://github.com/BEAMRobotics/beam_follower</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>cv_bridge</depend>
+  <depend>pcl_ros</depend>
+  <depend>roscpp</depend>
+  <depend>geometry_msgs</depend>
+
+</package>
