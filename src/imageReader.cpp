@@ -1,4 +1,4 @@
-#include "imageReader.h"
+#include "imageReader.hpp"
 
 using json = nlohmann::json;
 

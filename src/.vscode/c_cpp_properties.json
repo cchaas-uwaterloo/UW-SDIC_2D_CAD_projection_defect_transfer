@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**", 
                 "${workspaceFolder}/includes",
-                "usr/include/**"
+                "/usr/include/**",
+                "/home/sdic/catkin_ws/devel/include/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

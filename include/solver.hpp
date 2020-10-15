@@ -1,9 +1,10 @@
 // Class to display clouds and 2D point maps 
 
-#pragma once
+#ifndef CAMCAD_SOLVER_HPP
+#define CAMCAD_SOLVER_HPP
 
 #include <ceres/ceres.h>
-#include "imageReader.h"
+#include "imageReader.hpp"
 
 namespace cam_cad { 
 
@@ -18,3 +19,5 @@ public:
 
 
 }
+
+#endif

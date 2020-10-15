@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>cad_projection</name>
+  <name>beam_2DCAD_projection</name>
   <version>0.0.1</version>
   <description>Package to transfer geometric crack data from camera images to corresponding CAD drawings</description>
   <author email="BEAM@beam.io">BEAM</author>

@@ -1,15 +1,13 @@
 #include <stdio.h>
 #include <cstdint>
-#include "imageReader.h"
-#include "beam_matching/pointcloud_display.hpp"
-
-using namespace cam_cad;
-
+#include "imageReader.hpp"
+#include "visualizer.hpp"
+#include "solver.hpp"
 
 int main () {
 
-    ImageReader imageReader;
-    std::vector<point> input_points_camera, input_points_CAD; 
+    cam_cad::ImageReader imageReader;
+    std::vector<cam_cad::point> input_points_camera, input_points_CAD; 
     bool read_success_camera = false, read_success_CAD = false; 
 
     read_success_camera = imageReader.readPoints("/home/cameron/cam_cad_proj/src/P210_north.json", &input_points_camera); 
@@ -26,4 +24,8 @@ int main () {
 
     return 0;
 }
+
+
+
+
 

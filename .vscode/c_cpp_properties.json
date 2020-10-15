@@ -5,7 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include",
-                "/usr/include/**"
+                "/usr/local/include/**",
+                "/home/sdic/catkin_ws/devel/include/",
+                "/usr/local/include/vtk-7.1"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

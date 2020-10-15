@@ -1,10 +1,14 @@
 // Class to read in image data from JSON files 
 
+#ifndef CAMCAD_IMAGEREADER_HPP
+#define CAMCAD_IMAGEREADER_HPP
+
+
 #include <cstdint>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/transforms.h>
-#include <pcl/visualization/pcl_visualizer.h>
+//#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/common/common_headers.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
@@ -52,3 +56,4 @@ private:
 
 }
 
+#endif

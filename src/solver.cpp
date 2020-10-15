@@ -1,10 +1,11 @@
-#include "solver.h"
+#include "solver.hpp"
 
 namespace cam_cad {
 
 Solver::Solver() {}; 
 
 bool Solver::solveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_cloud_, std::vector<point> &camera_points_) {
+ /* 
     //define cost funtion
 
     
@@ -13,7 +14,7 @@ bool Solver::solveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
         ceres::Problem prob; 
         //ceres::ResidualBlock()
     }
-
+*/
     return true;
 }
 
