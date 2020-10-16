@@ -8,12 +8,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/transforms.h>
-//#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/common/common_headers.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/console/parse.h>
-//#include <pcl_conversions/pcl_conversions.h>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <string>

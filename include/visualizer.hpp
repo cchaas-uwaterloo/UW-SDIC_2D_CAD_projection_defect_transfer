@@ -11,6 +11,7 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/console/parse.h>
+#include <pcl/registration/correspondence_estimation.h>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <string>
@@ -22,16 +23,24 @@ namespace cam_cad {
 
 class Visualizer{
 public: 
-    Visualizer(const std::string &name_); 
+    Visualizer(const std::string name_); 
     ~Visualizer(); 
 
     void displayCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
-    void displayCameraPlane(const std::vector<point> &points_); 
-    void displayCameraPlane(const std::vector<point> &image_points_, const std::vector<point> &projected_points_);
+
+    // display camera and projected points in 2D without correspondences
+    void displayCameraPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
+                            pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud_);
+
+    // display camera and projected points in 2D with correspondences
+    //NOTE_ take correspondences from projected points to image points
+    void displayCameraPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
+                            pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud_,
+                            pcl::CorrespondencesConstPtr corrs_);
 
 private: 
     uint16_t num_clouds;
-    beam_matching::PointCloudDisplay* point_cloud_display;
+    boost::shared_ptr<beam_matching::PointCloudDisplay> point_cloud_display;
 };
 
 

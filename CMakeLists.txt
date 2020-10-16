@@ -33,9 +33,11 @@ catkin_package(
 # Core libraries
 add_library(image_reader src/imageReader.cpp)
   
-add_library (visualizer src/visualizer.cpp)
+add_library(visualizer src/visualizer.cpp)
   
-add_library (solver src/solver.cpp)
+add_library(solver src/solver.cpp)
+
+add_library(utils src/util.cpp)
 
 target_link_libraries(visualizer beam::beam)
 
@@ -59,7 +61,7 @@ add_definitions(${PCL_DEFINITIONS})
 # add main executable
 add_executable(${PROJECT_NAME} src/main.cpp)
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} beam::beam image_reader visualizer solver)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} beam::beam image_reader visualizer solver utils)
 
 # Mark executables and/or libraries for installation
 install(TARGETS ${PROJECT_NAME}
