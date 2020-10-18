@@ -16,6 +16,7 @@
 #include <fstream>
 #include <string>
 #include <math.h>
+#include <vector>
 
 namespace cam_cad { 
 

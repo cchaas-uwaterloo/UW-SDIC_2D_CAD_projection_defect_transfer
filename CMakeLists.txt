@@ -45,11 +45,6 @@ target_link_libraries(visualizer
   ${PCl_LIBRARIES}
 )
 
-target_link_libraries(pointcloud_display
-  beam::matching
-  ${PCl_LIBRARIES}
-)
-
 
 include_directories(
   include
@@ -73,8 +68,6 @@ add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EX
 target_link_libraries(${PROJECT_NAME} 
   ${catkin_LIBRARIES} 
   ${PCl_LIBRARIES}
-  beam::matching 
-  beam::filtering
   image_reader 
   visualizer 
   utils

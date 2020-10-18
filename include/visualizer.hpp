@@ -11,16 +11,17 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/console/parse.h>
+#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <string>
 #include <math.h>
 #include "imageReader.hpp"
-#include "beam_matching/pointcloud_display.hpp"
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <boost/make_shared.hpp>
 
 namespace cam_cad { 
 
@@ -54,6 +55,11 @@ private:
     boost::shared_ptr<std::thread> vis_thread;
     //mutex for the point_cloud_display object, held by the main thread when updating the visualization params
     std::mutex mtx;
+
+    std::string display_name;
+
+    bool continue_flag;
+    bool display1_called, display2_called, display3_called;
 
     //vis thread method in which the visualizer spins
     void spin();
