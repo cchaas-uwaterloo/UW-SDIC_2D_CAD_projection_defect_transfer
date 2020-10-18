@@ -36,9 +36,6 @@ bool ImageReader::readPoints (std::string filename_, std::vector<point>* points_
     read_index = 0;
     uint16_t index_ticker = 0;
 
-    std::cout <<"Here" << std::endl;
-
-
     while (input_string.at(read_index) != '}') {
         std::cout << read_index << " " << input_string.at(read_index) << std::endl;
         std::string scoord = "";
@@ -55,10 +52,8 @@ bool ImageReader::readPoints (std::string filename_, std::vector<point>* points_
         }
 
         if (index_ticker == 2) {
-            std::cout << "pushing" << std::endl;
             index_ticker = 0;
             points_->push_back(current_point);
-            std::cout << "pushed" << std::endl;
             point temp_point = points_->back();
             std::cout << "added point: " << temp_point.x << "," << temp_point.y << std::endl;
             num_points++;
