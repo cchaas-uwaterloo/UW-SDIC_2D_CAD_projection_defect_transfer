@@ -172,7 +172,7 @@ void ImageReader::densifyPoints (std::vector<point>* points_, uint8_t density_in
 
 }
 
-void populateCloud (std::vector<point>* points_, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
+void ImageReader::populateCloud (std::vector<point>* points_, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     
     uint16_t num_points = points_->size();
 

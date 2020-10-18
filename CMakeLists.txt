@@ -10,7 +10,7 @@ set(build_depends
   geometry_msgs
 )
 
-find_package(beam REQUIRED utils matching)
+find_package(beam REQUIRED matching utils)
 
 find_package(catkin REQUIRED
   COMPONENTS
@@ -39,7 +39,16 @@ add_library(solver src/solver.cpp)
 
 add_library(utils src/util.cpp)
 
-target_link_libraries(visualizer beam::beam)
+target_link_libraries(visualizer 
+  beam::matching
+  beam::filtering
+  ${PCl_LIBRARIES}
+)
+
+target_link_libraries(pointcloud_display
+  beam::matching
+  ${PCl_LIBRARIES}
+)
 
 
 include_directories(
@@ -61,7 +70,15 @@ add_definitions(${PCL_DEFINITIONS})
 # add main executable
 add_executable(${PROJECT_NAME} src/main.cpp)
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} beam::beam image_reader visualizer solver utils)
+target_link_libraries(${PROJECT_NAME} 
+  ${catkin_LIBRARIES} 
+  ${PCl_LIBRARIES}
+  beam::matching 
+  beam::filtering
+  image_reader 
+  visualizer 
+  utils
+)
 
 # Mark executables and/or libraries for installation
 install(TARGETS ${PROJECT_NAME}

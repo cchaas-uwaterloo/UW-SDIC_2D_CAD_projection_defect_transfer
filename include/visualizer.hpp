@@ -17,7 +17,10 @@
 #include <string>
 #include <math.h>
 #include "imageReader.hpp"
-#include <beam_matching/pointcloud_display.hpp>
+#include "beam_matching/pointcloud_display.hpp"
+#include <thread>
+#include <mutex>
+#include <chrono>
 
 namespace cam_cad { 
 
@@ -26,21 +29,35 @@ public:
     Visualizer(const std::string name_); 
     ~Visualizer(); 
 
-    void displayCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
+    void displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, std::string id_);
 
     // display camera and projected points in 2D without correspondences
-    void displayCameraPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
-                            pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud_);
+    void displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
+                            pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud_,
+                            std::string id_image_,
+                            std::string id_projected_);
 
     // display camera and projected points in 2D with correspondences
     //NOTE_ take correspondences from projected points to image points
-    void displayCameraPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
+    void displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
                             pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud_,
-                            pcl::CorrespondencesConstPtr corrs_);
+                            pcl::CorrespondencesConstPtr corrs_,
+                            std::string id_image_,
+                            std::string id_projected_);
+
+    //starts the visualizer without any point clouds in the vis_thread by calling the spin method 
+    void startVis(); 
+    void endVis();
 
 private: 
-    uint16_t num_clouds;
-    boost::shared_ptr<beam_matching::PointCloudDisplay> point_cloud_display;
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> point_cloud_display;
+    boost::shared_ptr<std::thread> vis_thread;
+    //mutex for the point_cloud_display object, held by the main thread when updating the visualization params
+    std::mutex mtx;
+
+    //vis thread method in which the visualizer spins
+    void spin();
+
 };
 
 
