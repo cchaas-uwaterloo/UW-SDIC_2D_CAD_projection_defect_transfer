@@ -22,6 +22,7 @@
 #include <mutex>
 #include <chrono>
 #include <boost/make_shared.hpp>
+#include <atomic>
 
 namespace cam_cad { 
 
@@ -52,13 +53,13 @@ public:
 
 private: 
     boost::shared_ptr<pcl::visualization::PCLVisualizer> point_cloud_display;
-    boost::shared_ptr<std::thread> vis_thread;
+    std::thread vis_thread;
     //mutex for the point_cloud_display object, held by the main thread when updating the visualization params
     std::mutex mtx;
 
     std::string display_name;
 
-    bool continue_flag;
+    std::atomic_flag continueFlag = ATOMIC_FLAG_INIT;
     bool display1_called, display2_called, display3_called;
 
     //vis thread method in which the visualizer spins

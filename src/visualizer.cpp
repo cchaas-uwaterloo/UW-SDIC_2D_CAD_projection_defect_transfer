@@ -7,7 +7,6 @@ Visualizer::Visualizer(const std::string name_) {
 } 
 
 Visualizer::~Visualizer() {
-  continue_flag = true;
   display1_called = true;
   display2_called = true;
   display3_called = true; 
@@ -20,12 +19,17 @@ void Visualizer::startVis() {
   point_cloud_display->addCoordinateSystem (1.0);
   point_cloud_display->initCameraParameters ();
 
+  printf("Started Vis \n");
+
+  this->continueFlag.test_and_set(std::memory_order_relaxed);
+
   //start the visualizer spinning in its own thread
-  vis_thread = boost::make_shared<std::thread>(&Visualizer::spin, this);
+  this->vis_thread = std::thread(&Visualizer::spin, this);
 }
 
 void Visualizer::endVis() {
-  vis_thread->join();
+  this->continueFlag.clear(std::memory_order_relaxed);
+  vis_thread.join();
 }
 
 void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, std::string id_) {
@@ -125,12 +129,17 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
 //private threaded functions
 
 void Visualizer::spin() {
-  while (!point_cloud_display->wasStopped ())
+  printf("in vis thread \n");
+  while (this->continueFlag.test_and_set(std::memory_order_relaxed) &&
+           !(this->point_cloud_display->wasStopped()))
   {
-    if (mtx.try_lock()) {
+    printf("vis thread \n");
+    //if (mtx.try_lock()) {
+      mtx.lock();
+      printf("got mutex for point cloud \n");
       point_cloud_display->spinOnce (3);
       mtx.unlock();
-    }
+    //}
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
