@@ -67,7 +67,7 @@ bool ImageReader::readPoints (std::string filename_, std::vector<point>* points_
 
 }
 
-void ImageReader::scalePoints (std::vector<point>* points_) {
+void ImageReader::scalePoints (std::vector<point>* points_, uint16_t scale_) {
     //scale points based on image scale (for CAD images)
     uint16_t num_points = points_->size(); 
 
@@ -78,8 +78,8 @@ void ImageReader::scalePoints (std::vector<point>* points_) {
         std::cout << "The point: " << current_point.x << "," << current_point.y << " has been transformed to: ";
 
         points_->erase(points_->begin());
-        current_point.x /= CADX_SCALE; 
-        current_point.y /= CADY_SCALE;
+        current_point.x *= scale_; 
+        current_point.y *= scale_;
 
         std::cout << current_point.x << "," << current_point.y << std::endl;
 
@@ -104,41 +104,59 @@ void ImageReader::densifyPoints (std::vector<point>* points_, uint8_t density_in
         points_->erase(points_->begin());
 
         //determine angle between points 
-        float slope = (float)(current_end_point.y-current_start_point.y)/(float)(current_end_point.x-current_start_point.x);
-        float theta = std::atan(std::abs(slope));
+        float slope, theta;
+
+        if ((current_end_point.x-current_start_point.x) == 0) {
+            theta = M_PI/2;
+        }
+        else if ((current_end_point.y-current_start_point.y) == 0) {
+            theta = 0;
+        }
+        else {
+            slope = (float)(current_end_point.y-current_start_point.y)/(float)(current_end_point.x-current_start_point.x);
+            theta = std::atan(std::abs(slope));
+        }
 
         std::cout << "The current slope value for these points is: " << slope << std::endl;
         std::cout << "The current theta value for these points is: " << theta << std::endl;
 
         //determine distance between points 
-        float dist = std::sqrt(std::abs(current_end_point.x-current_start_point.x) + std::abs(current_end_point.y-current_start_point.y));
+        float dist = std::sqrt(std::pow(std::abs(current_end_point.x-current_start_point.x),2) 
+                               + std::pow(std::abs(current_end_point.y-current_start_point.y),2));
 
         //number of points added between each reference point should be the same for both images for 1:1 mapping
         float interval = dist/(density_index_+1);
 
         //determine delta x and y values based on quadrant
-        int8_t dx, dy; 
+        float dx, dy; 
 
         //first quadrant: 
-        if ((current_end_point.y-current_start_point.y) > 0 && (current_end_point.x-current_start_point.x) > 0) {
+        if ((current_end_point.y-current_start_point.y) >= 0 && (current_end_point.x-current_start_point.x) >= 0) {
+            std::cout << "First quandrant" << std::endl;
             dx = interval*(std::cos(theta)); 
             dy = interval*(std::sin(theta));
         }
         //second quadrant 
-        else if ((current_end_point.y-current_start_point.y) > 0 && (current_end_point.x-current_start_point.x) < 0) {
+        else if ((current_end_point.y-current_start_point.y) >= 0 && (current_end_point.x-current_start_point.x) < 0) {
+            std::cout << "Second quandrant" << std::endl;
             dx = -interval*(std::cos(theta)); 
             dy = interval*(std::sin(theta));
         }
         //third quadrant 
-        else if ((current_end_point.y-current_start_point.y) < 0 && (current_end_point.x-current_start_point.x) < 0) {
+        else if ((current_end_point.y-current_start_point.y) < 0 && (current_end_point.x-current_start_point.x) <= 0) {
+            std::cout << "Third quandrant" << std::endl;
             dx = -interval*(std::cos(theta)); 
             dy = -interval*(std::sin(theta));
         }
         //fourth quadrant 
         else if ((current_end_point.y-current_start_point.y) < 0 && (current_end_point.x-current_start_point.x) > 0) {
+            std::cout << "Fourth quandrant" << std::endl;
             dx = interval*(std::cos(theta)); 
             dy = -interval*(std::sin(theta));
         }
+
+        std::cout << "The delta x value is: " << dx << std::endl;
+        std::cout << "The delta y value is: " << dy << std::endl;
 
         //std::cout << "The current delta x step for these points is: " << dx
 
@@ -174,13 +192,56 @@ void ImageReader::densifyPoints (std::vector<point>* points_, uint8_t density_in
 
 }
 
-void ImageReader::populateCloud (std::vector<point>* points_, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
+void ImageReader::populateCloud (std::vector<point>* points_, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, uint16_t init_z_pos_) {
     
     uint16_t num_points = points_->size();
 
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
-        pcl::PointXYZ current_3D_point(points_->at(point_index).x, points_->at(point_index).y, 0);
+        pcl::PointXYZ current_3D_point(points_->at(point_index).x, points_->at(point_index).y, init_z_pos_);
         cloud_->push_back(current_3D_point);
+    }
+}
+
+void ImageReader::originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
+    
+    uint16_t num_points = cloud_->size();
+
+    // determine min x and y values
+    uint32_t min_x = 100000, min_y = 100000;
+    for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
+        if (cloud_->at(point_index).x < min_x) min_x = cloud_->at(point_index).x;
+        if (cloud_->at(point_index).y < min_y) min_y = cloud_->at(point_index).y;
+        std::cout << "minx: " << min_x << std::endl;
+        std::cout << "miny: " << min_y << std::endl;
+    }
+
+    // shift all points back to abutt origin
+    for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
+        cloud_->at(point_index).x -= min_x;
+        cloud_->at(point_index).y -= min_y;
+    }
+
+}
+
+void ImageReader::rotateCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
+    // determine max x,y values
+    uint32_t max_x = 0, max_y = 0;
+    for (uint16_t point_index = 0; point_index < cloud_->size(); point_index ++) {
+        if (cloud_->at(point_index).x > max_x) max_x = cloud_->at(point_index).x;
+        if (cloud_->at(point_index).y > max_y) max_y = cloud_->at(point_index).y;
+    }
+
+    uint32_t min_x = 100000, min_y = 100000;
+    for (uint16_t point_index = 0; point_index < cloud_->size(); point_index ++) {
+        if (cloud_->at(point_index).x < min_x) min_x = cloud_->at(point_index).x;
+        if (cloud_->at(point_index).y < min_y) min_y = cloud_->at(point_index).y;
+    }
+    
+    for (uint16_t index = 0; index < cloud_->size(); index ++) {
+        cloud_->at(index).x = max_x - cloud_->at(index).x + min_x;
+        uint16_t x_tmp = cloud_->at(index).x;
+        cloud_->at(index).x = cloud_->at(index).y;
+        cloud_->at(index).y = x_tmp; 
     }
 }
 

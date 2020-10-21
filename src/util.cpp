@@ -12,7 +12,7 @@ void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_,
     pcl::registration::CorrespondenceEstimation<pcl::PointXYZ, pcl::PointXYZ> corr_est;
     corr_est.setInputSource(source_coud_);
     corr_est.setInputTarget(target_cloud_);
-    corr_est.determineCorrespondences(*corrs_,50);
+    corr_est.determineCorrespondences(*corrs_,max_dist_);
 
 }
 

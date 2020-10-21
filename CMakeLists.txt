@@ -10,7 +10,7 @@ set(build_depends
   geometry_msgs
 )
 
-find_package(beam REQUIRED matching utils)
+find_package(beam REQUIRED matching utils calibration)
 
 find_package(catkin REQUIRED
   COMPONENTS
@@ -43,6 +43,10 @@ target_link_libraries(visualizer
   beam::matching
   beam::filtering
   ${PCl_LIBRARIES}
+)
+
+target_link_libraries(solver
+  beam::calibration
 )
 
 
