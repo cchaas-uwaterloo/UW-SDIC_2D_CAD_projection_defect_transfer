@@ -47,6 +47,14 @@ public:
                             std::string id_image_,
                             std::string id_projected_);
 
+    void displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
+                            pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
+                            pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud_,
+                            pcl::CorrespondencesConstPtr corrs_,
+                            std::string id_image_,
+                            std::string id_CAD_,
+                            std::string id_projected_);
+
     //starts the visualizer without any point clouds in the vis_thread by calling the spin method 
     void startVis(); 
     void endVis();

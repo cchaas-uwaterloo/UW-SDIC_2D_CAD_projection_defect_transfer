@@ -16,6 +16,41 @@ void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_,
 
 }
 
+void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
+                        pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
+                        Eigen::Matrix4d T_CW,
+                        const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
+                        pcl::CorrespondencesPtr corrs_) {
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>); 
+    Eigen::Vector2d pixel_projected;
+
+    //transform the CAD cloud points to the camera fram 
+
+    //project all points to the image plane
+    //Note_ in all cases will revert to pcl::cloud for storage as it is the most flexible container for point data
+    for (uint16_t index = 0; index < CAD_cloud_->size(); index ++) {
+        Eigen::Vector3d cad_point (CAD_cloud_->at(index).x, CAD_cloud_->at(index).y, CAD_cloud_->at(index).z);
+        pixel_projected = camera_model_->ProjectPointPrecise(cad_point);
+
+        pcl::PointXYZ proj_point (pixel_projected.x(), pixel_projected.y(), 0);
+        proj_cloud->push_back(proj_point);
+    }
+
+    this->getCorrespondences(corrs_, proj_cloud, camera_cloud_, 1000);
+}
+
+void Util::TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, Eigen::Matrix4d T_CW,
+                          pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud_) {
+    
+    for(uint16_t i=0; i < CAD_cloud_->size(); i++) {
+        Eigen::Vector4d point (CAD_cloud_->at(i).x, CAD_cloud_->at(i).x, CAD_cloud_->at(i).x, 1);
+        Eigen::Vector4d point_transformed = T_CW*point; 
+    }
+
+}
+
+//TEST_ function
 void Util::originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     
     uint16_t num_points = cloud_->size();
@@ -37,6 +72,7 @@ void Util::originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
 
 }
 
+//TEST_ function
 void Util::rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     // determine max x,y values
     uint32_t max_x = 0, max_y = 0;
