@@ -44,10 +44,10 @@ int main () {
     imageReader.populateCloud(&input_points_CAD, input_cloud_CAD, 0);
     //imageReader.populateCloud(&input_points_CAD, input_cloud_CAD, 2000);
     
-    //imageReader.originCloudxy(input_cloud_CAD);
-    imageReader.rotateCWxy(input_cloud_CAD);
-    imageReader.rotateCWxy(input_cloud_CAD);
-    imageReader.rotateCWxy(input_cloud_CAD);
+    //mainUtility.originCloudxy(input_cloud_CAD);
+    mainUtility.rotateCCWxy(input_cloud_CAD);
+    mainUtility.rotateCCWxy(input_cloud_CAD);
+    mainUtility.rotateCCWxy(input_cloud_CAD);
 
     // TEST_ determine cloud correspondences
     mainUtility.getCorrespondences(correspondences, input_cloud_CAD, input_cloud_camera, 1000);

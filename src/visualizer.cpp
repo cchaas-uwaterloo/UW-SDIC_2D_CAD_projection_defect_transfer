@@ -116,11 +116,7 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
   for (uint16_t i = 0; i < corrs_->size(); i++) {
     uint16_t proj_point_index = corrs_->at(i).index_query;
     uint16_t cam_point_index = corrs_->at(i).index_match;
-    /*void addLine(const pcl::PointXYZ &pt1,
-                 const pcl::PointXYZ &pt2,
-                 int id1,
-                 int id2,
-                 bool reset_camera = false); */
+
     point_cloud_display->addLine(projected_cloud_->at(proj_point_index), image_cloud_->at(cam_point_index),
                                  0, 255, 0, std::to_string(line_id));
     line_start_index += 2;

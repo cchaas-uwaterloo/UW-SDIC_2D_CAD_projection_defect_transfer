@@ -70,6 +70,8 @@
         "unordered_set": "cpp",
         "slist": "cpp",
         "future": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp"
     }
 }

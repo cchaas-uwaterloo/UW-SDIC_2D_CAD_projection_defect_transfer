@@ -9,6 +9,7 @@
 #include <beam_calibration/CameraModel.h>
 #include <eigen.h>
 #include "imageReader.hpp"
+#include "util.hpp"
 
 namespace cam_cad { 
 
@@ -19,14 +20,27 @@ public:
 
     bool solveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
                             pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_);
+    //get correspondence estimate based on camera pose
+    void corrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
+                            pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
+                            pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud_,
+                            const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
+                            pcl::CorrespondencesPtr corrs_,
+                            Util* util_);
 
 private:
 
-    //get an initial projection based on an initial pose
-    void initialProjection ();
+    // sets the initial position of the structure (CAD) cloud with respect to the camera frame
+    void setPos (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, uint32_t z_dist_, uint8_t ccw_rotations_, Util* util_);
     
     //initialize the problem with the residual blocks for each projected point 
-    void buildProblem (ceres::Problem* problem);
+    void buildProblem (ceres::Problem* problem, pcl::CorrespondencesPtr corrs_, 
+                        const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
+                        pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
+                        pcl::PointCloud<pcl::PointXYZ>::Ptr cad_cloud_);
+
+    //initialize the ceres solver options for the problem
+    void initSolveOptions (ceres::Problem* problem);
 
     //set solution options and itterate through ceres solution
     void solveProblem (ceres::Problem* problem);

@@ -23,6 +23,8 @@ public:
                             pcl::PointCloud<pcl::PointXYZ>::Ptr source_coud_,
                             pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud_,
                             uint16_t max_dist_);
+    void originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
+    void rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
 
 };
 
