@@ -1,0 +1,53 @@
+# PD controller parameters
+p_x: 0.00002
+p_y: 0.00002
+d_x: 0.00001
+d_y: 0.00001
+
+# Darknet ROS topics - do not modify unless darknet configuration updated to match
+camera_reading_topic: /camera/rgb/image_raw
+bounding_box_topic: /darknet_ros/bounding_boxes
+object_count_topic: /darknet_ros/found_object
+detection_image_topic: /darknet_ros/detection_image
+
+
+# Internal topics
+lidar_topic: /point_cloud
+camera_number_topic: /camera_number
+acknowledge_topic: /camera_acknowledge
+pcl_acknowledge_topic: /pcl_acknowledge
+
+# Input/Output topics 
+subscribers: 
+
+  camera0: 
+    topic: /ladybug/camera0/image_color
+  
+  camera1: 
+    topic: /ladybug/camera1/image_color
+
+  camera2: 
+    topic: /ladybug/camera2/image_color
+
+  camera3: 
+    topic: /ladybug/camera3/image_color
+
+  camera4: 
+    topic: /ladybug/camera4/image_color
+
+  camera5: 
+    topic: /ladybug/camera5/image_color
+
+  lidar_raw:
+    topic: /front/velodyne_points
+
+publishers: 
+
+  filtered_cloud: 
+    topic: /publish_filtered_topic
+
+  original_cloud: 
+    topic: /publish_original_topic
+
+
+

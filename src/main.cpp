@@ -3,9 +3,11 @@
 #include <iostream>
 #include "imageReader.hpp"
 #include "visualizer.hpp"
-#include "solver.hpp"
+//#include "Solver.hpp"
 #include "util.hpp"
 #include <X11/Xlib.h> 
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 
 int main () {
@@ -22,12 +24,12 @@ int main () {
 
     bool read_success_camera = false, read_success_CAD = false; 
 
-    read_success_camera = imageReader.readPoints("/home/sdic/projects/beam_robotics/beam_2DCAD_projection/src/P210_north.json", &input_points_camera); 
+    read_success_camera = imageReader.readPoints("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/src/P210_north.json", &input_points_camera); 
 
     if (read_success_camera) printf("camera data read success\n");
 
 
-    read_success_CAD = imageReader.readPoints("/home/sdic/projects/beam_robotics/beam_2DCAD_projection/src/P210_north_crackmap.json", &input_points_CAD);
+    read_success_CAD = imageReader.readPoints("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/src/P210_north_crackmap.json", &input_points_CAD);
 
     if (read_success_camera) printf("CAD data read success\n");
 
@@ -43,18 +45,45 @@ int main () {
     imageReader.populateCloud(&input_points_camera, input_cloud_camera, 0);
     imageReader.populateCloud(&input_points_CAD, input_cloud_CAD, 0);
     //imageReader.populateCloud(&input_points_CAD, input_cloud_CAD, 2000);
+
+    printf("clouds populated \n");
     
     //mainUtility.originCloudxy(input_cloud_CAD);
-    mainUtility.rotateCCWxy(input_cloud_CAD);
-    mainUtility.rotateCCWxy(input_cloud_CAD);
-    mainUtility.rotateCCWxy(input_cloud_CAD);
+    //mainUtility.rotateCCWxy(input_cloud_CAD);
+    //mainUtility.rotateCCWxy(input_cloud_CAD);
+    //mainUtility.rotateCCWxy(input_cloud_CAD);
+    
+    /************ Test Transformation **********
+    Eigen::Matrix4d T_TEST = Eigen::Matrix4d::Identity(); 
+    T_TEST(2,3) = 2000; 
+
+    printf("matrix created \n");
+
+    mainUtility.ReadCameraModel();
+    mainUtility.SetLadyBugCamera(6);
+
+    printf("read camera information \n");
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+
+    mainUtility.TransformCloud(input_cloud_CAD, T_TEST, transformed_cloud);
+    mainUtility.ProjectCloud(transformed_cloud, projected_cloud);
+
+    mainUtility.getCorrespondences(correspondences, projected_cloud, input_cloud_camera, 1000); */
+
+    //******************************************* */
 
     // TEST_ determine cloud correspondences
-    mainUtility.getCorrespondences(correspondences, input_cloud_CAD, input_cloud_camera, 1000);
+    //mainUtility.getCorrespondences(correspondences, input_cloud_CAD, input_cloud_camera, 1000);
 
     vis1.startVis();
-    //vis1.displayClouds(input_cloud_camera, input_cloud_CAD, "camera_cloud", "CAD_cloud");
-    vis1.displayClouds(input_cloud_camera, input_cloud_CAD, correspondences, "camera_cloud", "CAD_cloud");
+
+    printf("started visualizer \n");
+
+    vis1.displayClouds(input_cloud_camera, input_cloud_CAD, "camera_cloud", "CAD_cloud");
+    //vis1.displayClouds(input_cloud_camera, input_cloud_CAD, correspondences, "camera_cloud", "CAD_cloud");
+    //vis1.displayClouds(input_cloud_camera, transformed_cloud, projected_cloud, correspondences, "camera_cloud", "transformed_cloud", "projected_cloud");
     //vis1.displayClouds(input_cloud_camera,"camera_cloud");
     //vis1.displayClouds(input_cloud_CAD, "CAD_cloud");
 
@@ -67,16 +96,6 @@ int main () {
     vis1.endVis();
 
     printf("exiting program \n");
-
-    /*
-    //TEST_ generate correspondences
-    boost::shared_ptr<pcl::Correspondences> correspondences =
-            boost::make_shared<pcl::Correspondences>();
-    mainUtility.getCorrespondences(correspondences, input_cloud_CAD, input_cloud_camera, 50);
-
-    //Display initial correspondences
-    vis1.displayCameraPlane(input_cloud_camera, input_cloud_CAD, correspondences);
-    */
 
 
     return 0;

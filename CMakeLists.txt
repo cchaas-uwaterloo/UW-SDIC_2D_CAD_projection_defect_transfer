@@ -31,13 +31,13 @@ catkin_package(
 )
 
 # Core libraries
-add_library(image_reader src/imageReader.cpp)
+add_library(image_reader STATIC src/imageReader.cpp)
   
-add_library(visualizer src/visualizer.cpp)
+add_library(visualizer STATIC src/visualizer.cpp)
   
-add_library(solver src/solver.cpp)
+# add_library(solver STATIC src/Solver.cpp)
 
-add_library(utils src/util.cpp)
+add_library(utils STATIC src/util.cpp)
 
 target_link_libraries(visualizer 
   beam::matching
@@ -45,9 +45,13 @@ target_link_libraries(visualizer
   ${PCl_LIBRARIES}
 )
 
-target_link_libraries(solver
+target_link_libraries(utils
   beam::calibration
 )
+
+# target_link_libraries(solver
+#   beam::calibration
+# )
 
 
 include_directories(

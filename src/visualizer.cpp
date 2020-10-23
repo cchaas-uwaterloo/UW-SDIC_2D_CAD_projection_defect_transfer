@@ -7,9 +7,10 @@ Visualizer::Visualizer(const std::string name_) {
 } 
 
 Visualizer::~Visualizer() {
-  display1_called = true;
-  display2_called = true;
-  display3_called = true; 
+  display1_called = false;
+  display2_called = false;
+  display3_called = false; 
+  display4_called = false;
 
 }
 
@@ -103,6 +104,58 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
   //otherwise, update the existing cloud
   else {
     point_cloud_display->updatePointCloud(image_cloud_, id_image_);
+    point_cloud_display->updatePointCloud(projected_cloud_, id_projected_);
+  }    
+
+  //remove all correspondence lines and redraw
+  point_cloud_display->removeAllShapes();
+
+  uint16_t line_start_index = 0, line_end_index = 1; 
+  uint16_t line_id = 0;
+
+  //illustrate correspondences
+  for (uint16_t i = 0; i < corrs_->size(); i++) {
+    uint16_t proj_point_index = corrs_->at(i).index_query;
+    uint16_t cam_point_index = corrs_->at(i).index_match;
+
+    point_cloud_display->addLine(projected_cloud_->at(proj_point_index), image_cloud_->at(cam_point_index),
+                                 0, 255, 0, std::to_string(line_id));
+    line_start_index += 2;
+    line_end_index += 2;
+    line_id ++;
+  }
+
+  mtx.unlock();
+
+  display3_called = true;
+
+}
+
+// display camera, transformed, and projected points with correspondences
+void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
+                        pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
+                        pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud_,
+                        pcl::CorrespondencesConstPtr corrs_,
+                        std::string id_image_,
+                        std::string id_CAD_,
+                        std::string id_projected_) {
+
+  //get mutex for visulalizer spinning in vis thread and either create a new cloud or update the existing one
+  mtx.lock();
+
+  //if the visualizer does not already contain the image cloud, add it
+  if(!display4_called) {
+    point_cloud_display->addPointCloud(image_cloud_, id_image_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_image_);
+    point_cloud_display->addPointCloud(CAD_cloud_, id_CAD_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_CAD_);
+    point_cloud_display->addPointCloud(projected_cloud_, id_projected_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_projected_); 
+  }
+  //otherwise, update the existing cloud
+  else {
+    point_cloud_display->updatePointCloud(image_cloud_, id_image_);
+    point_cloud_display->updatePointCloud(CAD_cloud_, id_CAD_);
     point_cloud_display->updatePointCloud(projected_cloud_, id_projected_);
   }    
 

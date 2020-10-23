@@ -2,7 +2,9 @@
 
 namespace cam_cad {
 
-Util::Util() {}; 
+Util::Util() {
+    camera_type = "ladybug";
+}; 
 
 void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_, 
                               pcl::PointCloud<pcl::PointXYZ>::Ptr source_coud_,
@@ -19,35 +21,63 @@ void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_,
 void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
                         Eigen::Matrix4d T_CW,
-                        const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
                         pcl::CorrespondencesPtr corrs_) {
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>); 
-    Eigen::Vector2d pixel_projected;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
-    //transform the CAD cloud points to the camera fram 
+    // transform the CAD cloud points to the camera frame
+    this->TransformCloud(CAD_cloud_,T_CW,trans_cloud);
 
-    //project all points to the image plane
-    //Note_ in all cases will revert to pcl::cloud for storage as it is the most flexible container for point data
-    for (uint16_t index = 0; index < CAD_cloud_->size(); index ++) {
-        Eigen::Vector3d cad_point (CAD_cloud_->at(index).x, CAD_cloud_->at(index).y, CAD_cloud_->at(index).z);
-        pixel_projected = camera_model_->ProjectPointPrecise(cad_point);
+    // project the transformed points to the camera plane
+    this->ProjectCloud(trans_cloud, proj_cloud);
 
-        pcl::PointXYZ proj_point (pixel_projected.x(), pixel_projected.y(), 0);
-        proj_cloud->push_back(proj_point);
-    }
-
+    // get correspondences
     this->getCorrespondences(corrs_, proj_cloud, camera_cloud_, 1000);
 }
 
-void Util::TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, Eigen::Matrix4d T_CW,
+void Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d T_CW,
                           pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud_) {
     
-    for(uint16_t i=0; i < CAD_cloud_->size(); i++) {
-        Eigen::Vector4d point (CAD_cloud_->at(i).x, CAD_cloud_->at(i).x, CAD_cloud_->at(i).x, 1);
+    for(uint16_t i=0; i < cloud_->size(); i++) {
+        Eigen::Vector4d point (cloud_->at(i).x, cloud_->at(i).y, cloud_->at(i).z, 1);
         Eigen::Vector4d point_transformed = T_CW*point; 
+        pcl::PointXYZ pcl_point_transformed (point_transformed(0), point_transformed(1), point_transformed(2));
+        trans_cloud_->push_back(pcl_point_transformed);
     }
 
+}
+
+void Util::ProjectCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud_) {
+    
+    for(uint16_t i=0; i < cloud_->size(); i++) {
+        Eigen::Vector3d point (cloud_->at(i).x, cloud_->at(i).y, cloud_->at(i).z);
+        opt<Eigen::Vector2d> pixel_projected;
+        if (camera_type == "base") pixel_projected = camera_model->ProjectPointPrecise(point);
+        else if (camera_type == "ladybug") pixel_projected = camera_model_ladybug->ProjectPointPrecise(point);
+        pcl::PointXYZ proj_point (pixel_projected.value()(0), pixel_projected.value()(1), 0);
+        proj_cloud_->push_back(proj_point);
+    }
+
+}
+
+void Util::ReadCameraModel () {
+    if (camera_type == "ladybug") {
+        std::string file_location = "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf";
+        std::cout << file_location << std::endl;
+        camera_model = beam_calibration::CameraModel::Create(file_location);
+    }
+    else if (camera_type == "base") {
+        std::string camera_model_location = "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/CamFactorIntrinsics.json";
+        camera_model = beam_calibration::CameraModel::Create(camera_model_location);
+    }
+    
+
+}
+
+void Util::SetLadyBugCamera (uint8_t num_camera_) {
+    camera_model_ladybug->SetCameraID(num_camera_);
+    camera_type = "ladybug";
 }
 
 //TEST_ function

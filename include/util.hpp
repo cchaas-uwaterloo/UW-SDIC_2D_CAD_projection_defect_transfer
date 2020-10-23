@@ -12,8 +12,15 @@
 #include <pcl/console/parse.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include "beam_calibration/CameraModel.h"
+#include "beam_calibration/Ladybug.h"
+#include <string>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <stdio.h>
 
 namespace cam_cad { 
+
+#define NUM_CAMERAS 6
 
 class Util{
 public: 
@@ -29,21 +36,26 @@ public:
     void CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
                         Eigen::Matrix4d T_CW,
-                        const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
                         pcl::CorrespondencesPtr corrs_);
 
-    void ProjectCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d T_CW, const std::shared_ptr<beam_calibration::CameraModel> camera_model_);
+    void TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d T_CW,
+                        pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud_);
+    void ProjectCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud_);
+
+    void ReadCameraModel ();
+    void SetLadyBugCamera (uint8_t num_camera_);
 
     void originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
     void rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
 
 private: 
 
-    void TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, Eigen::Matrix4d T_CW,
-                        pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud_);
+    std::shared_ptr<beam_calibration::Ladybug> camera_model_ladybug;
 
-    void Cloud(pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, Eigen::Matrix4d T_CW,
-                        pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud_);
+    std::shared_ptr<beam_calibration::CameraModel> camera_model;
+
+    std::string camera_type;
+
 
 };
 

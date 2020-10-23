@@ -68,7 +68,7 @@ private:
     std::string display_name;
 
     std::atomic_flag continueFlag = ATOMIC_FLAG_INIT;
-    bool display1_called, display2_called, display3_called;
+    bool display1_called, display2_called, display3_called, display4_called;
 
     //vis thread method in which the visualizer spins
     void spin();
