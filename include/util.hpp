@@ -35,11 +35,16 @@ public:
     //get correspondence estimates based on camera pos
     void CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
-                        Eigen::Matrix4d T_CW,
+                        Eigen::Matrix4d &T_CW,
                         pcl::CorrespondencesPtr corrs_);
 
-    void TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d T_CW,
+    //TODO_ update T_CW to pass by ref
+
+    void TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW,
                         pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud_);
+
+    void TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW);
+
     void ProjectCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud_);
 
     void ReadCameraModel ();

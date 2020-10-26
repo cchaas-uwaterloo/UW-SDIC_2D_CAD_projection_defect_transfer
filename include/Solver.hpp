@@ -23,10 +23,12 @@ public:
     bool SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
                             pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_);
 
+    std::shared_ptr<ceres::Problem> GetTransform();
+
 private:
     
     //initialize the problem with the residual blocks for each projected point 
-    void BuildCeresProblem (ceres::Problem* problem, pcl::CorrespondencesPtr corrs_, 
+    void BuildCeresProblem (std::shared_ptr<ceres::Problem>& problem, pcl::CorrespondencesPtr corrs_, 
                         const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
                         pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::Ptr cad_cloud_);
@@ -38,7 +40,7 @@ private:
     void LoadInitialPose (std::string location_);
 
     //set solution options and iterate through ceres solution
-    void SolveCeresProblem (ceres::Problem* problem);
+    void SolveCeresProblem (const std::shared_ptr<ceres::Problem>& problem, bool output_results);
 
     //get the camera model data 
     void ReadCameraModel (std::string location_);
@@ -54,9 +56,12 @@ ceres::Solver::Options ceres_solver_options_;
 std::unique_ptr<ceres::LossFunction> loss_function_;
 std::unique_ptr<ceres::LocalParameterization> se3_parameterization_;
 bool output_results_{true};
-bool has_converged; 
 uint8_t max_solution_iterations;
 std::vector<double> results; //stores the incremental results of the ceres solution
+
+std::shared_ptr<beam_calibration::Ladybug> camera_model_ladybug;
+
+std::shared_ptr<beam_calibration::CameraModel> camera_model;
 
 
 };

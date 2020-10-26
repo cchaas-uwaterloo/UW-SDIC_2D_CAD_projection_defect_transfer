@@ -3,13 +3,6 @@
 namespace cam_cad {
 
 Solver::Solver(Util* util) {
-    //initialize identity transform 
-    T_CW = Eigen::Matrix4d::Identity();
-
-    //initialize z offset
-    T_CW (2,3) = 2000; 
-
-    T_CW_prev = T_CW;
 
     util = util_;
 
@@ -18,16 +11,42 @@ Solver::Solver(Util* util) {
 bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
                                 pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_) {
 
-    bool converged = false;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    bool has_converged = false;
+    uint8_t iterations = 0;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
     // correspondence object tells the cost function which points to compare
     pcl::CorrespondencesPtr proj_corrs (new pcl::Correspondences); 
 
-     // build problems
-    std::shared_ptr<ceres::Problem> problem1 = SetupCeresOptions();
+     // initialize problem 
+    std::shared_ptr<ceres::Problem> problem = SetupCeresOptions();
 
-    return true;
+    LoadInitialPose("placeholder");
+
+    // loop problem until it has converged 
+    while (!has_converged && iterations < max_solution_iterations) {
+
+        //set previous iteration transform value
+        T_CW_prev = T_CW;
+        
+        // transform, project, and get correspondences
+        util->CorrEst(CAD_cloud_, camera_cloud_, T_CW, proj_corrs);
+
+        // update the position of the transformed cloud based on the upated transformation matrix 
+        // this is the starting point for the ceres solution for this iteration 
+        util->TransformCloud(trans_cloud);
+
+        BuildCeresProblem(problem,proj_corrs,camera_model, camera_cloud_, trans_cloud);
+
+        SolveCeresProblem(problem, true);
+
+        T_CW = vicon_calibration::utils::QuaternionAndTranslationToTransformMatrix(results);
+
+        CheckConvergence();
+    }
+
+    if (has_converged) return true;
+    else return false;
 }
 
 std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_) {
@@ -66,17 +85,21 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_
     return problem;
 }
 
-void Solver::BuildCeresProblem(ceres::Problem* problem, pcl::CorrespondencesPtr corrs_,
+void Solver::LoadInitialPose (std::string location_) {
+    Eigen::Matrix4d T_CW = Eigen::Matrix4d::Identity();
+    T_CW(2,3) = 2000; 
+
+    Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
+    Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
+    results{q1.w(), q1.x(), q1.y(), q1.z(), T_CW(0, 3), T_CW(1, 3), T_CW(2, 3)};
+
+}
+
+void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::CorrespondencesPtr corrs_,
                           const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
                           pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
                           pcl::PointCloud<pcl::PointXYZ>::Ptr cad_cloud_) {
 
-
-    //move this to the initial pos estimation
-    Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
-    Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
-    std::vector<double> results{
-        q1.w(), q1.x(), q1.y(), q1.z(), T_CW(0, 3), T_CW(1, 3), T_CW(2, 3)};
     // ----------------------------------------------
 
     problem1->AddParameterBlock(&(results[0]), 7,
@@ -99,6 +122,17 @@ void Solver::BuildCeresProblem(ceres::Problem* problem, pcl::CorrespondencesPtr 
         problem1->AddResidualBlock(cost_function1.release(), loss_function_.get(),
                                     &(results[0]));
         
+    }
+}
+
+void Solver::SolveCeresProblem(const std::shared_ptr<ceres::Problem>& problem, bool output_results) {
+    ceres::Solver::Summary ceres_summary;
+    ceres::Solve(ceres_solver_options_, problem.get(), &ceres_summary);
+    if (output_results) {
+        LOG_INFO("Done.");
+        LOG_INFO("Outputting ceres summary:");
+        std::string report = ceres_summary.FullReport();
+        std::cout << report << "\n";
     }
 }
 

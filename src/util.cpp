@@ -20,7 +20,7 @@ void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_,
 
 void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
-                        Eigen::Matrix4d T_CW,
+                        Eigen::Matrix4d &T_CW,
                         pcl::CorrespondencesPtr corrs_) {
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>); 
@@ -36,7 +36,7 @@ void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     this->getCorrespondences(corrs_, proj_cloud, camera_cloud_, 1000);
 }
 
-void Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d T_CW,
+void Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW,
                           pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud_) {
     
     for(uint16_t i=0; i < cloud_->size(); i++) {
@@ -44,6 +44,17 @@ void Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Ma
         Eigen::Vector4d point_transformed = T_CW*point; 
         pcl::PointXYZ pcl_point_transformed (point_transformed(0), point_transformed(1), point_transformed(2));
         trans_cloud_->push_back(pcl_point_transformed);
+    }
+
+}
+
+void Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW) {
+    
+    for(uint16_t i=0; i < cloud_->size(); i++) {
+        Eigen::Vector4d point (cloud_->at(i).x, cloud_->at(i).y, cloud_->at(i).z, 1);
+        Eigen::Vector4d point_transformed = T_CW*point; 
+        pcl::PointXYZ pcl_point_transformed (point_transformed(0), point_transformed(1), point_transformed(2));
+        cloud_->at(i) = pcl_point_transformed;
     }
 
 }
