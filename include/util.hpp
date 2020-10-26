@@ -12,11 +12,12 @@
 #include <pcl/console/parse.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include "beam_calibration/CameraModel.h"
-#include "beam_calibration/Ladybug.h"
+#include <beam_calibration/LadybugCamera.h>
 #include <string>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <stdio.h>
+#include <optional>
 
 namespace cam_cad { 
 
@@ -38,24 +39,23 @@ public:
                         Eigen::Matrix4d &T_CW,
                         pcl::CorrespondencesPtr corrs_);
 
-    //TODO_ update T_CW to pass by ref
+    pcl::PointCloud<pcl::PointXYZ>::Ptr TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW);
 
-    void TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW,
-                        pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud_);
+    void TransformCloudUpdate(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW);
 
-    void TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr ProjectCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
 
-    void ProjectCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud_);
+    Eigen::Matrix4d QuaternionAndTranslationToTransformMatrix(const std::vector<double>& pose_);
 
     void ReadCameraModel ();
     void SetLadyBugCamera (uint8_t num_camera_);
+
+    std::shared_ptr<beam_calibration::CameraModel> GetCameraModel();
 
     void originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
     void rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
 
 private: 
-
-    std::shared_ptr<beam_calibration::Ladybug> camera_model_ladybug;
 
     std::shared_ptr<beam_calibration::CameraModel> camera_model;
 

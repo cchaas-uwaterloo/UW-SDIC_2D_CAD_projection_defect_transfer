@@ -47,7 +47,7 @@ public:
                             std::string id_image_,
                             std::string id_projected_);
 
-    void displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
+    void displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cloud_,
                             pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
                             pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud_,
                             pcl::CorrespondencesConstPtr corrs_,
@@ -60,7 +60,7 @@ public:
     void endVis();
 
 private: 
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> point_cloud_display;
+    pcl::visualization::PCLVisualizer::Ptr point_cloud_display;
     std::thread vis_thread;
     //mutex for the point_cloud_display object, held by the main thread when updating the visualization params
     std::mutex mtx;

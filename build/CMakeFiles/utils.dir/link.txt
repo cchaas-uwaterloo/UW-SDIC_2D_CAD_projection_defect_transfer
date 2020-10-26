@@ -1,2 +1,0 @@
-/usr/bin/ar qc devel/lib/libutils.a  CMakeFiles/utils.dir/src/util.cpp.o
-/usr/bin/ranlib devel/lib/libutils.a

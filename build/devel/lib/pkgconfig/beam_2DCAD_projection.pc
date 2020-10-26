@@ -1,8 +1,0 @@
-prefix=/home/cameron/projects/beam_robotics/beam_2DCAD_projection/build/devel
-
-Name: beam_2DCAD_projection
-Description: Description of beam_2DCAD_projection
-Version: 0.0.1
-Cflags: -I/home/cameron/projects/beam_robotics/beam_2DCAD_projection/include
-Libs: -L${prefix}/lib -lbeam_2DCAD_projection
-Requires: roscpp cv_bridge pcl_ros geometry_msgs

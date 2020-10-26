@@ -2,51 +2,81 @@
 
 namespace cam_cad {
 
-Solver::Solver(Util* util) {
-
+Solver::Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_) {
+    vis = vis_;
     util = util_;
-
+    camera_model = util->GetCameraModel();
+    max_solution_iterations = 100;
 }; 
 
 bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
-                                pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_) {
+                                pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_) {
 
     bool has_converged = false;
     uint8_t iterations = 0;
     pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+
+    printf("In solver\n");
 
     // correspondence object tells the cost function which points to compare
     pcl::CorrespondencesPtr proj_corrs (new pcl::Correspondences); 
 
      // initialize problem 
-    std::shared_ptr<ceres::Problem> problem = SetupCeresOptions();
+    std::shared_ptr<ceres::Problem> problem = SetupCeresOptions("placeholder");
 
     LoadInitialPose("placeholder");
+
+    vis->startVis();
+
+    printf("ready to start optimization \n");
 
     // loop problem until it has converged 
     while (!has_converged && iterations < max_solution_iterations) {
 
         //set previous iteration transform value
         T_CW_prev = T_CW;
+
+        printf("Solver iteration %u \n", iterations);
         
         // transform, project, and get correspondences
         util->CorrEst(CAD_cloud_, camera_cloud_, T_CW, proj_corrs);
 
         // update the position of the transformed cloud based on the upated transformation matrix 
         // this is the starting point for the ceres solution for this iteration 
-        util->TransformCloud(trans_cloud);
+        trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
-        BuildCeresProblem(problem,proj_corrs,camera_model, camera_cloud_, trans_cloud);
+        // project cloud for visualizer
+        proj_cloud = util->ProjectCloud(trans_cloud);
+
+        vis->displayClouds(camera_cloud_, trans_cloud, proj_cloud, proj_corrs, "camera_cloud", "transformed_cloud", "projected_cloud");
+
+        BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, trans_cloud);
 
         SolveCeresProblem(problem, true);
 
-        T_CW = vicon_calibration::utils::QuaternionAndTranslationToTransformMatrix(results);
+        T_CW = util->QuaternionAndTranslationToTransformMatrix(results);
 
-        CheckConvergence();
+        iterations ++;
+
+        std::string sep = "\n----------------------------------------\n";
+        std::cout << T_CW << sep;
+
+        //CheckConvergence();
     }
+
+    vis->endVis();
 
     if (has_converged) return true;
     else return false;
+}
+
+bool CheckConvergence() {
+    
+}
+
+Eigen::Matrix4d Solver::GetTransform() {
+    return T_CW;
 }
 
 std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_) {
@@ -91,7 +121,7 @@ void Solver::LoadInitialPose (std::string location_) {
 
     Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
-    results{q1.w(), q1.x(), q1.y(), q1.z(), T_CW(0, 3), T_CW(1, 3), T_CW(2, 3)};
+    results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CW(0, 3), T_CW(1, 3), T_CW(2, 3)};
 
 }
 
@@ -102,24 +132,24 @@ void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::Co
 
     // ----------------------------------------------
 
-    problem1->AddParameterBlock(&(results[0]), 7,
+    problem->AddParameterBlock(&(results[0]), 7,
                                 se3_parameterization_.get());
 
-    for (int i = 0; i < corrs_.size(); i++) {
+    for (int i = 0; i < corrs_->size(); i++) {
         //pixel 
-        Eigen::Vector2d pixel (camera_cloud_->at(corrs_->at(i).index_match).x,camera_cloud_->at(corrs_->at(i).index_match).y)
+        Eigen::Vector2d pixel (camera_cloud_->at(corrs_->at(i).index_match).x,camera_cloud_->at(corrs_->at(i).index_match).y);
 
         //P_STRUCT
-        Eigen::Vector3d P_STRUCT (camera_cloud_->at(corrs_->at(i).query_match).x,
-                                  camera_cloud_->at(corrs_->at(i).query_match).y,
-                                  camera_cloud_->at(corrs_->at(i).query_match).z)
+        Eigen::Vector3d P_STRUCT (camera_cloud_->at(corrs_->at(i).index_query).x,
+                                  camera_cloud_->at(corrs_->at(i).index_query).y,
+                                  camera_cloud_->at(corrs_->at(i).index_query).z);
 
         // add residuals
-        std::unique_ptr<ceres::CostFunction> cost_function1(
-            CeresCameraCostFunction::Create(pixels[i], P_STRUCT,
+        std::unique_ptr<ceres::CostFunction> cost_function(
+            CeresCameraCostFunction::Create(pixel, P_STRUCT,
                                             camera_model));
 
-        problem1->AddResidualBlock(cost_function1.release(), loss_function_.get(),
+        problem->AddResidualBlock(cost_function.release(), loss_function_.get(),
                                     &(results[0]));
         
     }

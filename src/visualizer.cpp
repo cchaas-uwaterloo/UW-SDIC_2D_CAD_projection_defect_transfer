@@ -15,8 +15,8 @@ Visualizer::~Visualizer() {
 }
 
 void Visualizer::startVis() {
-  point_cloud_display = boost::make_shared<pcl::visualization::PCLVisualizer>(display_name);
-  point_cloud_display->setBackgroundColor (0, 0, 0);
+  point_cloud_display = boost::make_shared<pcl::visualization::PCLVisualizer> (display_name);
+  point_cloud_display->setBackgroundColor (255, 255, 255);
   point_cloud_display->addCoordinateSystem (1000);
   point_cloud_display->initCameraParameters ();
 
@@ -42,6 +42,7 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, std::
   if(!display1_called) {
     point_cloud_display->addPointCloud(cloud_, id_,0);
     point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_);
+    point_cloud_display->resetCamera();
     printf("Point cloud added \n");
     
   }
@@ -68,9 +69,10 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
   if(!display2_called) {
     point_cloud_display->addPointCloud(image_cloud_, id_image_);
     point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_image_);
+    point_cloud_display->resetCamera();
     point_cloud_display->addPointCloud(projected_cloud_, id_projected_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_projected_);
-    
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_projected_);  
+    point_cloud_display->resetCamera();  
   }
   //otherwise, update the existing cloud
   else {
@@ -132,7 +134,7 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
 }
 
 // display camera, transformed, and projected points with correspondences
-void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
+void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud_,
                         pcl::CorrespondencesConstPtr corrs_,
@@ -179,7 +181,7 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
 
   mtx.unlock();
 
-  display3_called = true;
+  display4_called = true;
 
 }
 

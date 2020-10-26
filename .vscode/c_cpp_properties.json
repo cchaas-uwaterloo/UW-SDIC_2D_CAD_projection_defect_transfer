@@ -6,8 +6,7 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include",
                 "/usr/local/include/**",
-                "/home/cameron/catkin_ws/devel/include/",
-                "/usr/local/include/vtk-7.1", 
+                "/home/nick/catkin_ws/devel/include/",
                 "/opt/ros/kinetic/include/**"
             ],
             "defines": [],

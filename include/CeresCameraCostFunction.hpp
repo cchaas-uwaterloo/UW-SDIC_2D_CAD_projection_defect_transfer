@@ -2,6 +2,7 @@
 #include <ceres/autodiff_cost_function.h>
 #include <ceres/rotation.h>
 #include <ceres/cost_function_to_functor.h>
+#include <optional>
 
 #include <beam_calibration/CameraModel.h>
 
@@ -12,8 +13,8 @@ struct CameraProjectionFunctor {
 
   bool operator()(const double* P, double* pixel) const {
     Eigen::Vector3d P_CAMERA_eig{P[0], P[1], P[2]};
-    opt<Eigen::Vector2d> pixel_projected =
-        camera_model_->ProjectPointPrecise(P_CAMERA_eig);
+    std::optional<Eigen::Vector2d> pixel_projected =
+        camera_model_->ProjectPoint(P_CAMERA_eig);
     if (!pixel_projected.has_value()) { return false; }
     pixel[0] = pixel_projected.value()[0];
     pixel[1] = pixel_projected.value()[1];
@@ -50,10 +51,10 @@ struct CeresCameraCostFunction {
     P_CAMERA[1] += T_CR[5];
     P_CAMERA[2] += T_CR[6];
 
-    const T P_CAMERA_const = *P_CAMERA;
+    const T* P_CAMERA_const = &(P_CAMERA[0]);
 
     T pixel_projected[2];
-    (*compute_projection)(&P_CAMERA_const, &pixel_projected[0]);
+    (*compute_projection)(P_CAMERA_const, &(pixel_projected[0]));
 
     residuals[0] = pixel_detected_.cast<T>()[0] - pixel_projected[0];
     residuals[1] = pixel_detected_.cast<T>()[1] - pixel_projected[1];

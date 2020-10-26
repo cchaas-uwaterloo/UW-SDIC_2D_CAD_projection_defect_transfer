@@ -18,7 +18,7 @@ find_package(catkin REQUIRED
 )
 
 find_package(Ceres REQUIRED)
-find_package(PCL REQUIRED)
+find_package(PCL 1.8 REQUIRED)
 
 
 catkin_package(
@@ -35,7 +35,7 @@ add_library(image_reader STATIC src/imageReader.cpp)
   
 add_library(visualizer STATIC src/visualizer.cpp)
   
-# add_library(solver STATIC src/Solver.cpp)
+add_library(solver STATIC src/Solver.cpp)
 
 add_library(utils STATIC src/util.cpp)
 
@@ -49,9 +49,13 @@ target_link_libraries(utils
   beam::calibration
 )
 
-# target_link_libraries(solver
-#   beam::calibration
-# )
+target_link_libraries(solver
+   beam::calibration
+   visualizer
+   utils
+   ${PCl_LIBRARIES}
+   ${CERES_LIBRARIES}
+)
 
 
 include_directories(
@@ -79,6 +83,7 @@ target_link_libraries(${PROJECT_NAME}
   image_reader 
   visualizer 
   utils
+  solver
 )
 
 # Mark executables and/or libraries for installation
