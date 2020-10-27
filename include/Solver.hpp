@@ -46,8 +46,9 @@ private:
     //set solution options and iterate through ceres solution
     void SolveCeresProblem (const std::shared_ptr<ceres::Problem>& problem, bool output_results);
 
-    //check the transform against the previous iteration, if each dimmension is unchanged within a certain tolerance, end the optimization
-    bool CheckConvergence();
+    //check convergence by determining the error between the projection and 
+    bool CheckConvergence(pcl::PointCloud<pcl::PointXYZ>::Ptr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr match_cloud_, 
+                          pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_);
 
     Eigen::Matrix4d T_CW; //world -> camera transformatin matrix
     Eigen::Matrix4d T_CW_prev; //previous iteration's world -> camera transformation matrix

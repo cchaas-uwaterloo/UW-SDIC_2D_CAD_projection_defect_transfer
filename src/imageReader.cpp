@@ -67,7 +67,7 @@ bool ImageReader::readPoints (std::string filename_, std::vector<point>* points_
 
 }
 
-void ImageReader::scalePoints (std::vector<point>* points_, uint16_t scale_) {
+void ImageReader::scalePoints (std::vector<point>* points_, float scale_) {
     //scale points based on image scale (for CAD images)
     uint16_t num_points = points_->size(); 
 
@@ -75,13 +75,9 @@ void ImageReader::scalePoints (std::vector<point>* points_, uint16_t scale_) {
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
         point current_point = points_->at(0);
 
-        std::cout << "The point: " << current_point.x << "," << current_point.y << " has been transformed to: ";
-
         points_->erase(points_->begin());
         current_point.x *= scale_; 
         current_point.y *= scale_;
-
-        std::cout << current_point.x << "," << current_point.y << std::endl;
 
         points_->push_back(current_point);
     }
@@ -99,8 +95,6 @@ void ImageReader::densifyPoints (std::vector<point>* points_, uint8_t density_in
         point current_start_point = points_->at(0);
         point current_end_point = points_->at(1);
 
-        std::cout << "Between the points : " << current_start_point.x << "," << current_start_point.y << " and " 
-                  << current_end_point.x << "," << current_end_point.y << " the following points have been added: \n";
         points_->erase(points_->begin());
 
         //determine angle between points 
@@ -117,9 +111,6 @@ void ImageReader::densifyPoints (std::vector<point>* points_, uint8_t density_in
             theta = std::atan(std::abs(slope));
         }
 
-        std::cout << "The current slope value for these points is: " << slope << std::endl;
-        std::cout << "The current theta value for these points is: " << theta << std::endl;
-
         //determine distance between points 
         float dist = std::sqrt(std::pow(std::abs(current_end_point.x-current_start_point.x),2) 
                                + std::pow(std::abs(current_end_point.y-current_start_point.y),2));
@@ -132,31 +123,24 @@ void ImageReader::densifyPoints (std::vector<point>* points_, uint8_t density_in
 
         //first quadrant: 
         if ((current_end_point.y-current_start_point.y) >= 0 && (current_end_point.x-current_start_point.x) >= 0) {
-            std::cout << "First quandrant" << std::endl;
             dx = interval*(std::cos(theta)); 
             dy = interval*(std::sin(theta));
         }
         //second quadrant 
         else if ((current_end_point.y-current_start_point.y) >= 0 && (current_end_point.x-current_start_point.x) < 0) {
-            std::cout << "Second quandrant" << std::endl;
             dx = -interval*(std::cos(theta)); 
             dy = interval*(std::sin(theta));
         }
         //third quadrant 
         else if ((current_end_point.y-current_start_point.y) < 0 && (current_end_point.x-current_start_point.x) <= 0) {
-            std::cout << "Third quandrant" << std::endl;
             dx = -interval*(std::cos(theta)); 
             dy = -interval*(std::sin(theta));
         }
         //fourth quadrant 
         else if ((current_end_point.y-current_start_point.y) < 0 && (current_end_point.x-current_start_point.x) > 0) {
-            std::cout << "Fourth quandrant" << std::endl;
             dx = interval*(std::cos(theta)); 
             dy = -interval*(std::sin(theta));
         }
-
-        std::cout << "The delta x value is: " << dx << std::endl;
-        std::cout << "The delta y value is: " << dy << std::endl;
 
         //std::cout << "The current delta x step for these points is: " << dx
 
@@ -187,9 +171,6 @@ void ImageReader::densifyPoints (std::vector<point>* points_, uint8_t density_in
 
     }
 
-    std::cout << "The last point in the vector is now: " << points_->back().x << "," << points_->back().y << std::endl; 
-    std::cout << "The first point in the vector is now: " << points_->at(0).x << "," << points_->at(0).y << std::endl; 
-
 }
 
 void ImageReader::populateCloud (std::vector<point>* points_, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, uint16_t init_z_pos_) {
@@ -211,8 +192,6 @@ void ImageReader::originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
         if (cloud_->at(point_index).x < min_x) min_x = cloud_->at(point_index).x;
         if (cloud_->at(point_index).y < min_y) min_y = cloud_->at(point_index).y;
-        std::cout << "minx: " << min_x << std::endl;
-        std::cout << "miny: " << min_y << std::endl;
     }
 
     // shift all points back to abutt origin

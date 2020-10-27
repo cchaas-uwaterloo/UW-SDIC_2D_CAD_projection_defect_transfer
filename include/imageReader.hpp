@@ -41,7 +41,7 @@ public:
     ~ImageReader () = default;
 
     bool readPoints (std::string filename_, std::vector<point>* points_); 
-    void scalePoints (std::vector<point>* points_, uint16_t scale_);
+    void scalePoints (std::vector<point>* points_, float scale_);
     void densifyPoints (std::vector<point>* points_, uint8_t density_index_);
     void populateCloud (std::vector<point>* points_, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, uint16_t init_z_pos_);
 

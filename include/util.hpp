@@ -12,7 +12,7 @@
 #include <pcl/console/parse.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include "beam_calibration/CameraModel.h"
-#include <beam_calibration/LadybugCamera.h>
+#include <beam_calibration/Ladybug.h>
 #include <string>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -51,6 +51,9 @@ public:
     void SetLadyBugCamera (uint8_t num_camera_);
 
     std::shared_ptr<beam_calibration::CameraModel> GetCameraModel();
+
+    void addZeroPoint (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
+    void projectPointsTest (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
 
     void originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
     void rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);

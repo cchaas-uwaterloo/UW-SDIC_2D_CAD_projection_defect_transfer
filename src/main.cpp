@@ -28,12 +28,12 @@ int main () {
 
     bool read_success_camera = false, read_success_CAD = false; 
 
-    read_success_camera = imageReader.readPoints("/home/nick/projects/beam_robotics/beam_2DCAD_projection/src/P210_north.json", &input_points_camera); 
+    read_success_camera = imageReader.readPoints("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/src/P210_north.json", &input_points_camera); 
 
     if (read_success_camera) printf("camera data read success\n");
 
 
-    read_success_CAD = imageReader.readPoints("/home/nick/projects/beam_robotics/beam_2DCAD_projection/src/P210_north_crackmap.json", &input_points_CAD);
+    read_success_CAD = imageReader.readPoints("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/src/P210_north_crackmap.json", &input_points_CAD);
 
     if (read_success_camera) printf("CAD data read success\n");
 
@@ -44,7 +44,7 @@ int main () {
     imageReader.densifyPoints(&input_points_camera, 10);
     imageReader.densifyPoints(&input_points_CAD, 10);
 
-    //imageReader.scalePoints(&input_points_CAD, 10);
+    imageReader.scalePoints(&input_points_CAD, 0.5);
 
     printf("points scaled \n");
 
@@ -58,16 +58,18 @@ int main () {
 
     //Unit tests*********************//
 
-    mainUtility.getCorrespondences(correspondences, input_cloud_CAD, input_cloud_camera, 1000);
+    //mainUtility.getCorrespondences(correspondences, input_cloud_CAD, input_cloud_camera, 1000);
     
-    //mainUtility.originCloudxy(input_cloud_CAD);
+    mainUtility.originCloudxy(input_cloud_CAD);
     //mainUtility.rotateCCWxy(input_cloud_CAD);
     //mainUtility.rotateCCWxy(input_cloud_CAD);
     //mainUtility.rotateCCWxy(input_cloud_CAD);
+
+    mainUtility.addZeroPoint(input_cloud_CAD);
     
     /************ Test Transformation **********/
     Eigen::Matrix4d T_TEST = Eigen::Matrix4d::Identity(); 
-    T_TEST(2,3) = 2000; 
+    T_TEST(2,3) = 10; 
 
     printf("matrix created \n");
 
@@ -80,32 +82,42 @@ int main () {
     pcl::PointCloud<pcl::PointXYZ>::Ptr projected_cloud;
 
     transformed_cloud = mainUtility.TransformCloud(input_cloud_CAD, T_TEST);
+
+    printf("transformed cloud \n");
+
     projected_cloud = mainUtility.ProjectCloud(transformed_cloud);
+    
+    //Test_ point projection
+    mainUtility.projectPointsTest(transformed_cloud);
+
+    printf("projected cloud \n");
+
+    mainUtility.getCorrespondences(correspondences, projected_cloud, input_cloud_camera, 1000);
 
     // TEST_ determine cloud correspondences
     //mainUtility.getCorrespondences(correspondences, input_cloud_CAD, input_cloud_camera, 1000);
 
-    //vis1.startVis();
+    vis1.startVis();
 
-    //printf("started visualizer \n");
+    printf("started visualizer \n");
 
     //vis1.displayClouds(input_cloud_camera, input_cloud_CAD, "camera_cloud", "CAD_cloud");
     //vis1.displayClouds(input_cloud_camera, input_cloud_CAD, correspondences, "camera_cloud", "CAD_cloud");
-    //vis1.displayClouds(input_cloud_camera, transformed_cloud, projected_cloud, correspondences, "camera_cloud", "transformed_cloud", "projected_cloud");
+    vis1.displayClouds(input_cloud_camera, transformed_cloud, projected_cloud, correspondences, "camera_cloud", "transformed_cloud", "projected_cloud");
     //vis1.displayClouds(input_cloud_camera,"camera_cloud");
     //vis1.displayClouds(input_cloud_CAD, "CAD_cloud");
 
     //*******************************//
 
     //Solver Block*******************//
-
+    /*
     solverUtility->ReadCameraModel();
 
     cam_cad::Solver solver(solverVisualizer, solverUtility);
 
     solver.SolveOptimization(input_cloud_CAD, input_cloud_camera);
 
-
+    */
     //*******************************//
 
     char end = ' ';
@@ -114,7 +126,7 @@ int main () {
         cin >> end; 
     }
 
-    //vis1.endVis();
+    vis1.endVis();
 
     printf("exiting program \n");
 

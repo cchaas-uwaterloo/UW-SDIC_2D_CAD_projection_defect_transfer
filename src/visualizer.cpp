@@ -16,7 +16,7 @@ Visualizer::~Visualizer() {
 
 void Visualizer::startVis() {
   point_cloud_display = boost::make_shared<pcl::visualization::PCLVisualizer> (display_name);
-  point_cloud_display->setBackgroundColor (255, 255, 255);
+  point_cloud_display->setBackgroundColor (0, 0, 0);
   point_cloud_display->addCoordinateSystem (1000);
   point_cloud_display->initCameraParameters ();
 
@@ -153,12 +153,14 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
     point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_CAD_);
     point_cloud_display->addPointCloud(projected_cloud_, id_projected_);
     point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_projected_); 
+    point_cloud_display->resetCamera();
   }
   //otherwise, update the existing cloud
   else {
     point_cloud_display->updatePointCloud(image_cloud_, id_image_);
     point_cloud_display->updatePointCloud(CAD_cloud_, id_CAD_);
     point_cloud_display->updatePointCloud(projected_cloud_, id_projected_);
+    point_cloud_display->resetCamera();
   }    
 
   //remove all correspondence lines and redraw
@@ -167,8 +169,15 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
   uint16_t line_start_index = 0, line_end_index = 1; 
   uint16_t line_id = 0;
 
+  printf("clouds added to visualizer \n");
+
+  //printf("%n correspondences to add \n", corrs_->size());
+
   //illustrate correspondences
   for (uint16_t i = 0; i < corrs_->size(); i++) {
+
+    printf ("correspondence to add \n");
+
     uint16_t proj_point_index = corrs_->at(i).index_query;
     uint16_t cam_point_index = corrs_->at(i).index_match;
 
