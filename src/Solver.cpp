@@ -6,7 +6,7 @@ Solver::Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_) {
     vis = vis_;
     util = util_;
     camera_model = util->GetCameraModel();
-    max_solution_iterations = 100;
+    max_solution_iterations = 5;
 }; 
 
 bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
@@ -27,7 +27,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
     LoadInitialPose("placeholder");
 
-    vis->startVis();
+    //vis->startVis();
 
     // transform, project, and get correspondences
     util->CorrEst(CAD_cloud_, camera_cloud_, T_CW, proj_corrs);
@@ -37,7 +37,8 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
     // project cloud for visualizer
-    proj_cloud = util->ProjectCloud(trans_cloud);
+    //proj_cloud = util->ProjectCloud(trans_cloud);
+    proj_cloud = util->projectPointsTest(trans_cloud, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
 
     printf("ready to start optimization \n");
 
@@ -49,9 +50,11 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
         printf("Solver iteration %u \n", iterations);
 
-        vis->displayClouds(camera_cloud_, trans_cloud, proj_cloud, proj_corrs, "camera_cloud", "transformed_cloud", "projected_cloud");
+        //vis->displayClouds(camera_cloud_, trans_cloud, proj_cloud, proj_corrs, "camera_cloud", "transformed_cloud", "projected_cloud");
 
         BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, trans_cloud);
+
+        printf("Solving with %zu correspondences \n", proj_corrs->size());
 
         SolveCeresProblem(problem, true);
 
@@ -68,7 +71,8 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
         trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
         // project cloud for visualizer
-        proj_cloud = util->ProjectCloud(trans_cloud);
+        //proj_cloud = util->ProjectCloud(trans_cloud);
+        proj_cloud = util->projectPointsTest(trans_cloud, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
 
         iterations ++;
 
@@ -81,7 +85,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     else return false;
 }
 
-bool CheckConvergence(pcl::PointCloud<pcl::PointXYZ>::Ptr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr match_cloud_, 
+bool Solver::CheckConvergence(pcl::PointCloud<pcl::PointXYZ>::Ptr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr match_cloud_, 
                       pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_) {
     float pixel_error_average;
 
@@ -140,7 +144,7 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_
 
 void Solver::LoadInitialPose (std::string location_) {
     Eigen::Matrix4d T_CW = Eigen::Matrix4d::Identity();
-    T_CW(2,3) = 2000; 
+    T_CW(2,3) = 200; 
 
     Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);

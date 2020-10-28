@@ -5,6 +5,7 @@
 #include <optional>
 
 #include <beam_calibration/CameraModel.h>
+#include "util.hpp"
 
 struct CameraProjectionFunctor {
   CameraProjectionFunctor(
@@ -13,8 +14,11 @@ struct CameraProjectionFunctor {
 
   bool operator()(const double* P, double* pixel) const {
     Eigen::Vector3d P_CAMERA_eig{P[0], P[1], P[2]};
+    //std::optional<Eigen::Vector2i> pixel_projected =
+    //    camera_model_->ProjectPoint(P_CAMERA_eig);
+    cam_cad::Util tempUtil;
     std::optional<Eigen::Vector2i> pixel_projected =
-        camera_model_->ProjectPoint(P_CAMERA_eig);
+        tempUtil.projectPointTest(P_CAMERA_eig, camera_model_);
     if (!pixel_projected.has_value()) { return false; }
     pixel[0] = pixel_projected.value()[0];
     pixel[1] = pixel_projected.value()[1];

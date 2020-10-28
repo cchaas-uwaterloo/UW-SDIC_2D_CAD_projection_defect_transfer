@@ -23,14 +23,15 @@ void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
                         Eigen::Matrix4d &T_CW,
                         pcl::CorrespondencesPtr corrs_) {
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud; 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>); 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
     // transform the CAD cloud points to the camera frame
     trans_cloud = this->TransformCloud(CAD_cloud_,T_CW);
 
     // project the transformed points to the camera plane
-    proj_cloud = this->ProjectCloud(trans_cloud);
+    //proj_cloud = this->ProjectCloud(trans_cloud);
+    proj_cloud = this->projectPointsTest(trans_cloud, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
 
     // get correspondences
     this->getCorrespondences(corrs_, proj_cloud, camera_cloud_, 1000);
@@ -68,7 +69,6 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::ProjectCloud (pcl::PointCloud<pcl::Poi
     
     for(uint16_t i=0; i < cloud_->size(); i++) {
         Eigen::Vector3d point (cloud_->at(i).x, cloud_->at(i).y, cloud_->at(i).z);
-        printf("Point to project %f %f %f \n", point.x(), point.y(), point.z());
         std::optional<Eigen::Vector2i> pixel_projected;
         if (camera_type == "base") pixel_projected = camera_model->ProjectPoint(point);
         else if (camera_type == "ladybug") pixel_projected = camera_model->ProjectPoint(point);
@@ -80,8 +80,6 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::ProjectCloud (pcl::PointCloud<pcl::Poi
         }
         
     }
-
-    printf ("Points successfully projected to image plane %f \n", proj_cloud->size());
 
     return proj_cloud;
 
@@ -123,19 +121,17 @@ void Util::SetLadyBugCamera (uint8_t num_camera_) {
 }
 
 //TEST_ function 
-void Util::projectPointsTest (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
+pcl::PointCloud<pcl::PointXYZ>::Ptr Util::projectPointsTest (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, const std::string& file_path) {
     // check if point is behind image plane
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud_test (new pcl::PointCloud<pcl::PointXYZ>);
 
     LadybugError lb_error_;
     Eigen::VectorXd intrinsics = camera_model->GetIntrinsics();
 
-    LadybugContext lb_context_;
-
-    lb_error_ = ladybugCreateContext(&lb_context_);
-
-    if (lb_error_ != LADYBUG_OK) {
-        printf("Ladybug threw an error \n");
-    }
+    unsigned int cam_id_ = 0;
+    const unsigned int LB_FULL_WIDTH_ = 2048;
+    const unsigned int LB_FULL_HEIGHT_ = 2464;
 
     double focal_length_;
     double cx_;
@@ -145,12 +141,30 @@ void Util::projectPointsTest (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     cx_ = intrinsics[2];
     cy_ = intrinsics[3];
 
-    printf ("Project points test: focal length = %f \n", focal_length_);
-    printf ("Project points test: cx = %f \n", cx_);
-    printf ("Project points test: cy = %f \n", cy_);
+    LadybugContext lb_context_;
+
+    lb_error_ = ladybugCreateContext(&lb_context_);
+
+    lb_error_ = ladybugLoadConfig(lb_context_, file_path.c_str());
+
+    lb_error_ = ladybugConfigureOutputImages(lb_context_, LADYBUG_ALL_RECTIFIED_IMAGES);
+  
+    lb_error_ =
+      ladybugSetOffScreenImageSize(lb_context_, LADYBUG_ALL_RECTIFIED_IMAGES,
+                                   LB_FULL_HEIGHT_, LB_FULL_WIDTH_);
+
+    lb_error_ =
+      ladybugGetCameraUnitFocalLength(lb_context_, cam_id_, &focal_length_);
+
+    lb_error_ = ladybugGetCameraUnitImageCenter(lb_context_, cam_id_, &cx_, &cy_);
+
+    if (lb_error_ != LADYBUG_OK) {
+        printf("Ladybug threw an error \n");
+    }
 
     for (uint16_t i = 0; i < cloud_->size(); i++) {
         Eigen::Vector3d point (cloud_->at(i).x, cloud_->at(i).y, cloud_->at(i).z);
+        pcl::PointXYZ p_projected;
         if (point[2] > 0) {
             Eigen::Vector2d coords;
             Eigen::Vector3d x_proj, X_flip;
@@ -170,13 +184,97 @@ void Util::projectPointsTest (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
             Eigen::Vector2d pixel_out = {0, 0};
             lb_error_ = ladybugUnrectifyPixel(lb_context_, 1, coords[0], coords[1],
                                                 &pixel_out[0], &pixel_out[1]);
-            
-            printf("The normalized projected x pixel is: %f \n", coords[0]);
-            printf("The rectified x pixel is: %f \n", pixel_out[0]);
 
+            if (lb_error_ != LADYBUG_OK) {
+                printf("Ladybug threw an error: %s \n", ladybugErrorToString(lb_error_));
+            }
+            else {
+                p_projected.x = pixel_out[0];
+                p_projected.y = pixel_out[1];
+                p_projected.z = 0;
+                proj_cloud_test->push_back(p_projected);
+            }
+            
         }
 
     }
+
+    return proj_cloud_test;
+
+}
+
+std::optional<Eigen::Vector2i> Util::projectPointTest (Eigen::Vector3d point_, std::shared_ptr<beam_calibration::CameraModel> camera_model_) {
+    
+    LadybugError lb_error_;
+    Eigen::VectorXd intrinsics = camera_model_->GetIntrinsics();
+
+    printf("got camera model intrinsics \n");
+
+
+    unsigned int cam_id_ = 0;
+    const unsigned int LB_FULL_WIDTH_ = 2048;
+    const unsigned int LB_FULL_HEIGHT_ = 2464;
+
+    double focal_length_;
+    double cx_;
+    double cy_;
+
+    focal_length_ = intrinsics[1];
+    cx_ = intrinsics[2];
+    cy_ = intrinsics[3];
+
+    LadybugContext lb_context_;
+
+    lb_error_ = ladybugCreateContext(&lb_context_);
+
+    lb_error_ = ladybugLoadConfig(lb_context_, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
+
+    lb_error_ = ladybugConfigureOutputImages(lb_context_, LADYBUG_ALL_RECTIFIED_IMAGES);
+  
+    lb_error_ =
+      ladybugSetOffScreenImageSize(lb_context_, LADYBUG_ALL_RECTIFIED_IMAGES,
+                                   LB_FULL_HEIGHT_, LB_FULL_WIDTH_);
+
+    lb_error_ =
+      ladybugGetCameraUnitFocalLength(lb_context_, cam_id_, &focal_length_);
+
+    lb_error_ = ladybugGetCameraUnitImageCenter(lb_context_, cam_id_, &cx_, &cy_);
+
+    if (lb_error_ != LADYBUG_OK) {
+        printf("Ladybug threw an error \n");
+    }
+
+    printf("setup camera intrinsics \n");
+
+    if (point_[2] > 0) {
+        Eigen::Vector2d coords;
+        Eigen::Vector3d x_proj, X_flip;
+        Eigen::Matrix3d K;
+        K << focal_length_, 0, cx_, 0, focal_length_, cy_, 0, 0, 1;
+
+        X_flip[0] = -point_[1]; // x = -y
+        X_flip[1] = point_[0];  // y = x
+        X_flip[2] = point_[2];  // z = z
+        // project
+        x_proj = K * X_flip;
+        // normalize
+        coords[0] = x_proj[0] / x_proj[2];
+        coords[1] = x_proj[1] / x_proj[2];
+        Eigen::Vector2d pixel_out = {0, 0};
+        lb_error_ = ladybugUnrectifyPixel(lb_context_, 1, coords[0], coords[1],
+                                            &pixel_out[0], &pixel_out[1]);
+
+        Eigen::Vector2i pixel_round_out = {0,0};
+
+        pixel_round_out[0] = std::round(pixel_out[0]);
+        pixel_round_out[1] = std::round(pixel_out[1]);
+
+        printf("finished point project \n");
+
+        return pixel_round_out;    
+    }
+
+    return {};
 
 }
 

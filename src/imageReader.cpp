@@ -37,12 +37,10 @@ bool ImageReader::readPoints (std::string filename_, std::vector<point>* points_
     uint16_t index_ticker = 0;
 
     while (input_string.at(read_index) != '}') {
-        std::cout << read_index << " " << input_string.at(read_index) << std::endl;
         std::string scoord = "";
         while (std::isdigit(input_string.at(read_index))) {
             scoord = scoord + input_string.at(read_index);
             read_index ++;
-            std::cout << read_index << " " << input_string.at(read_index) << std::endl;
         }
 
         if (scoord != "") {
@@ -55,7 +53,6 @@ bool ImageReader::readPoints (std::string filename_, std::vector<point>* points_
             index_ticker = 0;
             points_->push_back(current_point);
             point temp_point = points_->back();
-            std::cout << "added point: " << temp_point.x << "," << temp_point.y << std::endl;
             num_points++;
         }
 
@@ -163,8 +160,6 @@ void ImageReader::densifyPoints (std::vector<point>* points_, uint8_t density_in
             point current_inter_point(current_x_coord,current_y_coord);
             points_->push_back(current_inter_point);
 
-            // DEBUG_
-            std::cout << current_x_coord << "," << current_y_coord << std::endl;
             current_x_coord += dx;
             current_y_coord += dy;
         }

@@ -176,8 +176,6 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
   //illustrate correspondences
   for (uint16_t i = 0; i < corrs_->size(); i++) {
 
-    printf ("correspondence to add \n");
-
     uint16_t proj_point_index = corrs_->at(i).index_query;
     uint16_t cam_point_index = corrs_->at(i).index_match;
 

@@ -68,8 +68,9 @@ int main () {
     mainUtility.addZeroPoint(input_cloud_CAD);
     
     /************ Test Transformation **********/
+    /*
     Eigen::Matrix4d T_TEST = Eigen::Matrix4d::Identity(); 
-    T_TEST(2,3) = 10; 
+    T_TEST(2,3) = 200; 
 
     printf("matrix created \n");
 
@@ -85,10 +86,10 @@ int main () {
 
     printf("transformed cloud \n");
 
-    projected_cloud = mainUtility.ProjectCloud(transformed_cloud);
+    //projected_cloud = mainUtility.ProjectCloud(transformed_cloud);
     
     //Test_ point projection
-    mainUtility.projectPointsTest(transformed_cloud);
+    projected_cloud = mainUtility.projectPointsTest(transformed_cloud,"/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
 
     printf("projected cloud \n");
 
@@ -105,19 +106,21 @@ int main () {
     //vis1.displayClouds(input_cloud_camera, input_cloud_CAD, correspondences, "camera_cloud", "CAD_cloud");
     vis1.displayClouds(input_cloud_camera, transformed_cloud, projected_cloud, correspondences, "camera_cloud", "transformed_cloud", "projected_cloud");
     //vis1.displayClouds(input_cloud_camera,"camera_cloud");
-    //vis1.displayClouds(input_cloud_CAD, "CAD_cloud");
+    //vis1.displayClouds(projected_cloud, "Projected cloud");
+
+    */
 
     //*******************************//
 
     //Solver Block*******************//
-    /*
+    
     solverUtility->ReadCameraModel();
 
     cam_cad::Solver solver(solverVisualizer, solverUtility);
 
     solver.SolveOptimization(input_cloud_CAD, input_cloud_camera);
 
-    */
+    
     //*******************************//
 
     char end = ' ';

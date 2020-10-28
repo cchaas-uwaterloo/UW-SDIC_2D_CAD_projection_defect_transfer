@@ -50,10 +50,15 @@ public:
     void ReadCameraModel ();
     void SetLadyBugCamera (uint8_t num_camera_);
 
+    //TEST_ functions
+
     std::shared_ptr<beam_calibration::CameraModel> GetCameraModel();
 
     void addZeroPoint (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
-    void projectPointsTest (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr projectPointsTest (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_,const std::string& file_path);
+
+    std::optional<Eigen::Vector2i> projectPointTest (Eigen::Vector3d point_, std::shared_ptr<beam_calibration::CameraModel> camera_model_);
 
     void originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
     void rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
