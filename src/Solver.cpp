@@ -27,7 +27,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
     LoadInitialPose("placeholder");
 
-    //vis->startVis();
+    vis->startVis();
 
     // transform, project, and get correspondences
     util->CorrEst(CAD_cloud_, camera_cloud_, T_CW, proj_corrs);
@@ -37,8 +37,8 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
     // project cloud for visualizer
-    //proj_cloud = util->ProjectCloud(trans_cloud);
-    proj_cloud = util->projectPointsTest(trans_cloud, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
+    proj_cloud = util->ProjectCloud(trans_cloud);
+    //proj_cloud = util->projectPointsTest(trans_cloud, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
 
     printf("ready to start optimization \n");
 
@@ -50,7 +50,13 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
         printf("Solver iteration %u \n", iterations);
 
-        //vis->displayClouds(camera_cloud_, trans_cloud, proj_cloud, proj_corrs, "camera_cloud", "transformed_cloud", "projected_cloud");
+        vis->displayClouds(camera_cloud_, trans_cloud, proj_cloud, proj_corrs, "camera_cloud", "transformed_cloud", "projected_cloud");
+
+        char end = ' ';
+
+        while (end != 'n') {
+            cin >> end; 
+        }
 
         BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, trans_cloud);
 
@@ -76,30 +82,12 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
         iterations ++;
 
-        has_converged = CheckConvergence(proj_cloud, camera_cloud_, proj_corrs, 20);
+        //has_converged = CheckConvergence(proj_cloud, camera_cloud_, proj_corrs, 20);
     }
 
     vis->endVis();
-
     if (has_converged) return true;
     else return false;
-}
-
-bool Solver::CheckConvergence(pcl::PointCloud<pcl::PointXYZ>::Ptr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr match_cloud_, 
-                      pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_) {
-    float pixel_error_average;
-
-    for(float i = 0; i < corrs_->size(); i ++) {
-        pixel_error_average += std::sqrt(std::pow((query_cloud_->at(corrs_->at(i).index_query).x - match_cloud_->at(corrs_->at(i).index_match).x),2) + 
-                               std::pow((query_cloud_->at(corrs_->at(i).index_query).y - match_cloud_->at(corrs_->at(i).index_match).y),2));
-    }
-
-    pixel_error_average /= corrs_->size(); 
-
-    if (pixel_error_average <= (float)pixel_threshold_) return true; 
-
-    return false;
-
 }
 
 Eigen::Matrix4d Solver::GetTransform() {
@@ -161,6 +149,8 @@ void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::Co
 
     problem->AddParameterBlock(&(results[0]), 7,
                                 se3_parameterization_.get());
+
+    printf("added parameter block \n");
 
     for (int i = 0; i < corrs_->size(); i++) {
         //pixel 

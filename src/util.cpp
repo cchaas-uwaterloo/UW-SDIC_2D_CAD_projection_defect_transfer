@@ -30,8 +30,8 @@ void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     trans_cloud = this->TransformCloud(CAD_cloud_,T_CW);
 
     // project the transformed points to the camera plane
-    //proj_cloud = this->ProjectCloud(trans_cloud);
-    proj_cloud = this->projectPointsTest(trans_cloud, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
+    proj_cloud = this->ProjectCloud(trans_cloud);
+    //proj_cloud = this->projectPointsTest(trans_cloud, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
 
     // get correspondences
     this->getCorrespondences(corrs_, proj_cloud, camera_cloud_, 1000);
@@ -76,7 +76,6 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::ProjectCloud (pcl::PointCloud<pcl::Poi
         if (pixel_projected.has_value()) {
             pcl::PointXYZ proj_point (pixel_projected.value()(0), pixel_projected.value()(1), 0);
             proj_cloud->push_back(proj_point);
-            printf ("pixel project success");
         }
         
     }
