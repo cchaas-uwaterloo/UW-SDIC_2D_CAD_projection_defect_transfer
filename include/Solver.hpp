@@ -66,7 +66,6 @@ std::vector<double> results; //stores the incremental results of the ceres solut
 
 std::shared_ptr<beam_calibration::CameraModel> camera_model;
 
-
 };
 
 

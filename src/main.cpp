@@ -32,7 +32,6 @@ int main () {
 
     if (read_success_camera) printf("camera data read success\n");
 
-
     read_success_CAD = imageReader.readPoints("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/src/P210_north_crackmap.json", &input_points_CAD);
 
     if (read_success_camera) printf("CAD data read success\n");
@@ -44,7 +43,7 @@ int main () {
     imageReader.densifyPoints(&input_points_camera, 10);
     imageReader.densifyPoints(&input_points_CAD, 10);
 
-    imageReader.scalePoints(&input_points_CAD, 0.5);
+    imageReader.scalePoints(&input_points_CAD, 0.01);
 
     printf("points scaled \n");
 
@@ -64,13 +63,9 @@ int main () {
     //mainUtility.rotateCCWxy(input_cloud_CAD);
     //mainUtility.rotateCCWxy(input_cloud_CAD);
     //mainUtility.rotateCCWxy(input_cloud_CAD);
-
-    mainUtility.addZeroPoint(input_cloud_CAD);
     
     /************ Test Transformation **********/
-
     /*
-    
     Eigen::Matrix4d T_TEST = Eigen::Matrix4d::Identity(); 
     T_TEST(2,3) = 200; 
 
@@ -90,13 +85,6 @@ int main () {
 
     projected_cloud = mainUtility.ProjectCloud(transformed_cloud);
     
-    //Test_ point projection
-    //projected_cloud = mainUtility.projectPointsTest(transformed_cloud,"/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
-
-    printf("projected cloud \n");
-
-    mainUtility.getCorrespondences(correspondences, projected_cloud, input_cloud_camera, 1000);
-
     // TEST_ determine cloud correspondences
     //mainUtility.getCorrespondences(correspondences, input_cloud_CAD, input_cloud_camera, 1000);
 
@@ -109,7 +97,6 @@ int main () {
     vis1.displayClouds(input_cloud_camera, transformed_cloud, projected_cloud, correspondences, "camera_cloud", "transformed_cloud", "projected_cloud");
     //vis1.displayClouds(input_cloud_camera,"camera_cloud");
     //vis1.displayClouds(projected_cloud, "Projected cloud");
-
     */
 
     //*******************************//

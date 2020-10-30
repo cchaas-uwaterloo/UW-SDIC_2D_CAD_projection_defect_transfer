@@ -1,8 +1,12 @@
+#ifndef CAMCAD_CCCF_HPP
+#define CAMCAD_CCCF_HPP
+
 #include <ceres/numeric_diff_cost_function.h>
 #include <ceres/autodiff_cost_function.h>
 #include <ceres/rotation.h>
 #include <ceres/cost_function_to_functor.h>
 #include <optional>
+#include <stdio.h>
 
 #include <beam_calibration/CameraModel.h>
 
@@ -13,9 +17,21 @@ struct CameraProjectionFunctor {
 
   bool operator()(const double* P, double* pixel) const {
     Eigen::Vector3d P_CAMERA_eig{P[0], P[1], P[2]};
+<<<<<<< HEAD
     std::optional<Eigen::Vector2i> pixel_projected =
         camera_model_->ProjectPoint(P_CAMERA_eig);
     if (!pixel_projected.has_value()) { return false; }
+=======
+    std::optional<Eigen::Vector2d> pixel_projected =
+        camera_model_->ProjectPointPrecise(P_CAMERA_eig);
+    if (!pixel_projected.has_value()) {
+      //printf("failed projection \n"); 
+      pixel[0] = 5000.00; 
+      pixel[1] = 5000.00;
+      return false; 
+    }
+    //printf("projection succeeded: \n");
+>>>>>>> HEAD@{1}
     pixel[0] = pixel_projected.value()[0];
     pixel[1] = pixel_projected.value()[1];
     return true;
@@ -58,7 +74,11 @@ struct CeresCameraCostFunction {
 
     residuals[0] = pixel_detected_.cast<T>()[0] - pixel_projected[0];
     residuals[1] = pixel_detected_.cast<T>()[1] - pixel_projected[1];
+
+    //printf("projected pixels : %f , %f  \n", pixel_projected[0], pixel_projected[1]);
+
     return true;
+    
   }
 
   // Factory to hide the construction of the CostFunction object from
@@ -76,3 +96,5 @@ struct CeresCameraCostFunction {
   std::shared_ptr<beam_calibration::CameraModel> camera_model_;
   std::unique_ptr<ceres::CostFunctionToFunctor<2, 3>> compute_projection;
 };
+
+#endif

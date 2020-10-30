@@ -6,7 +6,7 @@ Solver::Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_) {
     vis = vis_;
     util = util_;
     camera_model = util->GetCameraModel();
-    max_solution_iterations = 5;
+    max_solution_iterations = 8;
 }; 
 
 bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
@@ -21,9 +21,6 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
     // correspondence object tells the cost function which points to compare
     pcl::CorrespondencesPtr proj_corrs (new pcl::Correspondences); 
-
-     // initialize problem 
-    std::shared_ptr<ceres::Problem> problem = SetupCeresOptions("placeholder");
 
     LoadInitialPose("placeholder");
 
@@ -42,11 +39,17 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
     printf("ready to start optimization \n");
 
+    std::string sep = "\n----------------------------------------\n";
+    std::cout << T_CW << sep;
+
     // loop problem until it has converged 
     while (!has_converged && iterations < max_solution_iterations) {
 
         //set previous iteration transform value
         T_CW_prev = T_CW;
+
+        // initialize problem 
+        std::shared_ptr<ceres::Problem> problem = SetupCeresOptions("placeholder");
 
         printf("Solver iteration %u \n", iterations);
 
@@ -58,7 +61,13 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
             cin >> end; 
         }
 
-        BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, trans_cloud);
+        char end = ' ';
+
+        while (end != 'r') {
+            cin >> end; 
+        }
+
+        BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, CAD_cloud_);
 
         printf("Solving with %zu correspondences \n", proj_corrs->size());
 
@@ -96,7 +105,7 @@ Eigen::Matrix4d Solver::GetTransform() {
 
 std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_) {
     // set ceres solver params
-    ceres_solver_options_.minimizer_progress_to_stdout = false;
+    ceres_solver_options_.minimizer_progress_to_stdout = true;
     ceres_solver_options_.max_num_iterations = 50;
     ceres_solver_options_.max_solver_time_in_seconds = 1e6;
     ceres_solver_options_.function_tolerance = 1e-8;
@@ -116,8 +125,10 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_
     std::shared_ptr<ceres::Problem> problem =
         std::make_shared<ceres::Problem>(ceres_problem_options);
 
-    loss_function_ =
-        std::unique_ptr<ceres::LossFunction>(new ceres::HuberLoss(1.0));
+    //loss_function_ =
+    //    std::unique_ptr<ceres::LossFunction>(new ceres::HuberLoss(1.0));
+
+    loss_function_ = NULL;
 
     std::unique_ptr<ceres::LocalParameterization> quat_parameterization(
         new ceres::QuaternionParameterization());
@@ -131,8 +142,8 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_
 }
 
 void Solver::LoadInitialPose (std::string location_) {
-    Eigen::Matrix4d T_CW = Eigen::Matrix4d::Identity();
-    T_CW(2,3) = 200; 
+    T_CW = Eigen::Matrix4d::Identity();
+    T_CW(2,3) = 50; 
 
     Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
@@ -157,17 +168,24 @@ void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::Co
         Eigen::Vector2d pixel (camera_cloud_->at(corrs_->at(i).index_match).x,camera_cloud_->at(corrs_->at(i).index_match).y);
 
         //P_STRUCT
-        Eigen::Vector3d P_STRUCT (camera_cloud_->at(corrs_->at(i).index_query).x,
-                                  camera_cloud_->at(corrs_->at(i).index_query).y,
-                                  camera_cloud_->at(corrs_->at(i).index_query).z);
+        Eigen::Vector3d P_STRUCT (cad_cloud_->at(corrs_->at(i).index_query).x,
+                                  cad_cloud_->at(corrs_->at(i).index_query).y,
+                                  cad_cloud_->at(corrs_->at(i).index_query).z);
 
-        // add residuals
-        std::unique_ptr<ceres::CostFunction> cost_function(
+
+        //check projections
+        //if (camera_model_->ProjectPointPrecise(P_STRUCT).has_value()) {
+
+            // add residuals
+            std::unique_ptr<ceres::CostFunction> cost_function(
             CeresCameraCostFunction::Create(pixel, P_STRUCT,
                                             camera_model));
 
-        problem->AddResidualBlock(cost_function.release(), loss_function_.get(),
+            problem->AddResidualBlock(cost_function.release(), loss_function_.get(),
                                     &(results[0]));
+
+        //}
+        
         
     }
 }
