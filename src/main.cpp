@@ -28,13 +28,20 @@ int main () {
 
     bool read_success_camera = false, read_success_CAD = false; 
 
+    std::string file_location = __FILE__;
+    file_location.erase(file_location.end() - 8, file_location.end());
+    std::string camera_file_location = file_location + "/P210_north.json";
+    std::string CAD_file_location = file_location + "/P210_north_crackmap.json";
+    std::cout << camera_file_location << std::endl;
+    std::cout << CAD_file_location << std::endl;
+
     read_success_camera = imageReader.readPoints("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/src/P210_north.json", &input_points_camera); 
 
     if (read_success_camera) printf("camera data read success\n");
 
     read_success_CAD = imageReader.readPoints("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/src/P210_north_crackmap.json", &input_points_CAD);
 
-    if (read_success_camera) printf("CAD data read success\n");
+    if (read_success_CAD) printf("CAD data read success\n");
 
     //*******************************//
 
@@ -49,7 +56,6 @@ int main () {
 
     imageReader.populateCloud(&input_points_camera, input_cloud_camera, 0);
     imageReader.populateCloud(&input_points_CAD, input_cloud_CAD, 0);
-    //imageReader.populateCloud(&input_points_CAD, input_cloud_CAD, 2000);
 
     printf("clouds populated \n");
 
@@ -72,7 +78,6 @@ int main () {
     printf("matrix created \n");
 
     mainUtility.ReadCameraModel();
-    mainUtility.SetLadyBugCamera(6);
 
     printf("read camera information \n");
 

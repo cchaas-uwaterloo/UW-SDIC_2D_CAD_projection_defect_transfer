@@ -12,7 +12,7 @@
 #include "imageReader.hpp"
 #include "util.hpp"
 #include "visualizer.hpp"
-#include "CeresCameraCostFunction.hpp"
+#include "CeresReprojectionCostFunction.hpp"
 #include <stdio.h>
 
 namespace cam_cad { 

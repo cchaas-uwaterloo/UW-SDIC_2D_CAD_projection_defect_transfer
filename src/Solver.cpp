@@ -86,8 +86,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
         trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
         // project cloud for visualizer
-        //proj_cloud = util->ProjectCloud(trans_cloud);
-        proj_cloud = util->projectPointsTest(trans_cloud, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
+        proj_cloud = util->ProjectCloud(trans_cloud);
 
         iterations ++;
 
@@ -125,9 +124,6 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_
     std::shared_ptr<ceres::Problem> problem =
         std::make_shared<ceres::Problem>(ceres_problem_options);
 
-    //loss_function_ =
-    //    std::unique_ptr<ceres::LossFunction>(new ceres::HuberLoss(1.0));
-
     loss_function_ = NULL;
 
     std::unique_ptr<ceres::LocalParameterization> quat_parameterization(
@@ -141,10 +137,12 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_
     return problem;
 }
 
+//TODO -> read in initial pose, or list of initial poses from json file
 void Solver::LoadInitialPose (std::string location_) {
     T_CW = Eigen::Matrix4d::Identity();
-    T_CW(2,3) = 50; 
-
+    Eigen::VectorXd perturbation(6, 1);
+    perturbation << 0, 0, 0, 0, 0, 400;  //this should come from a configuration file
+    Eigen::Matrix4d T_CW_pert = util->PerturbTransformDegM(T_CW, perturbation); 
     Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
     results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CW(0, 3), T_CW(1, 3), T_CW(2, 3)};
@@ -155,8 +153,6 @@ void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::Co
                           const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
                           pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
                           pcl::PointCloud<pcl::PointXYZ>::Ptr cad_cloud_) {
-
-    // ----------------------------------------------
 
     problem->AddParameterBlock(&(results[0]), 7,
                                 se3_parameterization_.get());
@@ -172,20 +168,13 @@ void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::Co
                                   cad_cloud_->at(corrs_->at(i).index_query).y,
                                   cad_cloud_->at(corrs_->at(i).index_query).z);
 
-
-        //check projections
-        //if (camera_model_->ProjectPointPrecise(P_STRUCT).has_value()) {
-
-            // add residuals
-            std::unique_ptr<ceres::CostFunction> cost_function(
-            CeresCameraCostFunction::Create(pixel, P_STRUCT,
+        // add residuals
+        std::unique_ptr<ceres::CostFunction> cost_function(
+        CeresReprojectionCostFunction::Create(pixel, P_STRUCT,
                                             camera_model));
 
-            problem->AddResidualBlock(cost_function.release(), loss_function_.get(),
-                                    &(results[0]));
-
-        //}
-        
+        problem->AddResidualBlock(cost_function.release(), loss_function_.get(),
+                                  &(results[0]));
         
     }
 }

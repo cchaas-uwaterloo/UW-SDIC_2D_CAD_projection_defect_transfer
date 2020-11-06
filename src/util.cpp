@@ -100,20 +100,34 @@ std::shared_ptr<beam_calibration::CameraModel> Util::GetCameraModel () {
 
 void Util::ReadCameraModel () {
     if (camera_type == "ladybug") {
-        std::string file_location = "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf";
+        std::string file_location = __FILE__;
+        file_location.erase(file_location.end() - 12, file_location.end());
+        file_location += "/config/ladybug.conf";
         std::cout << file_location << std::endl;
-        camera_model = beam_calibration::CameraModel::Create (file_location);
+        camera_model = beam_calibration::CameraModel::Create (file_location); 
     }
-    
 }
 
-void Util::SetLadyBugCamera (uint8_t num_camera_) {
-    //DEBUG_ test old camera model
-    
-    //camera_model->SetFrameID(num_camera_);
-    //camera_type = "ladybug";
-     
-    
+Eigen::Matrix4d Util::PerturbTransformRadM(const Eigen::Matrix4d& T_in,
+                                     const Eigen::VectorXd& perturbations) {
+  Eigen::Vector3d r_perturb = perturbations.block(0, 0, 3, 1);
+  Eigen::Vector3d t_perturb = perturbations.block(3, 0, 3, 1);
+  Eigen::Matrix3d R_in = T_in.block(0, 0, 3, 3);
+  Eigen::Matrix3d R_out = LieAlgebraToR(r_perturb) * R_in;
+  Eigen::Matrix4d T_out;
+  T_out.setIdentity();
+  T_out.block(0, 3, 3, 1) = T_in.block(0, 3, 3, 1) + t_perturb;
+  T_out.block(0, 0, 3, 3) = R_out;
+  return T_out;
+}
+
+Eigen::Matrix4d Util::PerturbTransformDegM(const Eigen::Matrix4d& T_in,
+                                     const Eigen::VectorXd& perturbations) {
+  Eigen::VectorXd perturbations_rad(perturbations);
+  perturbations_rad[0] = DegToRad(perturbations_rad[0]);
+  perturbations_rad[1] = DegToRad(perturbations_rad[1]);
+  perturbations_rad[2] = DegToRad(perturbations_rad[2]);
+  return PerturbTransformRadM(T_in, perturbations_rad);
 }
 
 //TEST_ function
@@ -171,6 +185,30 @@ void Util::rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
         cloud_->at(index).x = cloud_->at(index).y;
         cloud_->at(index).y = x_tmp; 
     }
+}
+
+// Private functions
+
+Eigen::Matrix3d Util::LieAlgebraToR(const Eigen::Vector3d& eps) {
+  return SkewTransform(eps).exp();
+}
+
+Eigen::Matrix3d Util::SkewTransform(const Eigen::Vector3d& V) {
+  Eigen::Matrix3d M;
+  M(0, 0) = 0;
+  M(0, 1) = -V(2, 0);
+  M(0, 2) = V(1, 0);
+  M(1, 0) = V(2, 0);
+  M(1, 1) = 0;
+  M(1, 2) = -V(0, 0);
+  M(2, 0) = -V(1, 0);
+  M(2, 1) = V(0, 0);
+  M(2, 2) = 0;
+  return M;
+}
+
+double Util::DegToRad(double d) {
+  return d * (M_PI / 180);
 }
 
 }

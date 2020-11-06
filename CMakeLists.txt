@@ -87,16 +87,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 # add test executables
-#add_executable(ceres_test tests/ceres_camera_test.cpp)
-#add_dependencies(ceres_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-#target_link_libraries(ceres_test 
-#  ${catkin_LIBRARIES} 
-#  ${PCl_LIBRARIES}
-#  image_reader 
-#  visualizer 
-#  utils
-#  solver
-#)
+
 
 # Mark executables and/or libraries for installation
 install(TARGETS ${PROJECT_NAME}

@@ -48,7 +48,13 @@ public:
     Eigen::Matrix4d QuaternionAndTranslationToTransformMatrix(const std::vector<double>& pose_);
 
     void ReadCameraModel ();
-    void SetLadyBugCamera (uint8_t num_camera_);
+    
+    Eigen::Matrix4d PerturbTransformRadM(const Eigen::Matrix4d& T_in,
+                                     const Eigen::VectorXd& perturbations);
+
+    Eigen::Matrix4d PerturbTransformDegM(const Eigen::Matrix4d& T_in,
+                                     const Eigen::VectorXd& perturbations);
+
 
     //TEST_ functions
 
@@ -60,6 +66,12 @@ public:
     void rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
 
 private: 
+
+    Eigen::Matrix3d LieAlgebraToR(const Eigen::Vector3d& eps);
+
+    Eigen::Matrix3d SkewTransform(const Eigen::Vector3d& V);
+
+    double DegToRad(double d);
 
     std::shared_ptr<beam_calibration::CameraModel> camera_model;
 
