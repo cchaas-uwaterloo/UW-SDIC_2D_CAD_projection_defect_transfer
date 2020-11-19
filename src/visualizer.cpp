@@ -17,7 +17,7 @@ Visualizer::~Visualizer() {
 void Visualizer::startVis() {
   point_cloud_display = boost::make_shared<pcl::visualization::PCLVisualizer> (display_name);
   point_cloud_display->setBackgroundColor (0, 0, 0);
-  point_cloud_display->addCoordinateSystem (10);
+  point_cloud_display->addCoordinateSystem (1000);
   point_cloud_display->initCameraParameters ();
 
   printf("Started Vis \n");

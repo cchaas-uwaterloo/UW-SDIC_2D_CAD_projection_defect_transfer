@@ -16,12 +16,11 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
-    printf("In solver\n");
-
     // correspondence object tells the cost function which points to compare
     pcl::CorrespondencesPtr proj_corrs (new pcl::Correspondences); 
 
     LoadInitialPose("placeholder");
+    ScaleCloud(CAD_cloud_,cloud_scale_);
 
     vis->startVis();
 
@@ -32,9 +31,11 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     std::string sep = "\n----------------------------------------\n";
     std::cout << T_CW << sep;
 
-    // update the position of the transformed cloud based on the upated transformation matrix 
-    // this is the starting point for the ceres solution for this iteration 
+    // transformed cloud is only for the visualizer, the actual ceres solution takes just teh original CAD cloud and the iterative results 
     trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
+
+    // blow up the transformed cloud for visualization
+    ScaleCloud(trans_cloud,(1/cloud_scale_));
 
     // project cloud for visualizer
     proj_cloud = util->ProjectCloud(trans_cloud);
@@ -56,9 +57,11 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
         char end = ' ';
 
-        while (end != 'n') {
+        while (end != 'n' && end != 'r') {
             cin >> end; 
         }
+
+        if (end == 'r') return false;
 
         BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, CAD_cloud_);
 
@@ -74,9 +77,11 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
         // transform, project, and get correspondences
         util->CorrEst(CAD_cloud_, camera_cloud_, T_CW, proj_corrs);
 
-        // update the position of the transformed cloud based on the upated transformation matrix 
-        // this is the starting point for the ceres solution for this iteration 
+        // update the position of the transformed cloud based on the upated transformation matrix for visualization
         trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
+
+        // blow up the transformed CAD cloud for visualization
+        ScaleCloud(trans_cloud,(1/cloud_scale_));
 
         // project cloud for visualizer
         proj_cloud = util->ProjectCloud(trans_cloud);
@@ -130,17 +135,24 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_
     return problem;
 }
 
-void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_) {
+void Solver::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_) {
     for (uint16_t i = 0; i < cloud_->size(); i++) {
-        cloud_->at(i) *= scale_;
+        cloud_->at(i).x *= scale_;
+        cloud_->at(i).y *= scale_;
+        cloud_->at(i).z *= scale_;
     }
 }
 
-//TODO -> read in initial pose, or list of initial poses from json file
 void Solver::LoadInitialPose (std::string location_) {
     T_CW = Eigen::Matrix4d::Identity();
     Eigen::VectorXd perturbation(6, 1);
-    perturbation << initial_alpha_, initial_beta_, initial_gamma_, initial_x_, initial_y_, initial_z_;  //this should come from a configuration file
+    perturbation << initial_alpha_, 0, 0, 0, 0, 0; 
+    T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+    perturbation << 0, initial_beta_, 0, 0, 0, 0;
+    T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+    perturbation << 0, 0, initial_gamma_, 0, 0, 0;
+    T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+    perturbation << 0, 0, 0, initial_x_, initial_y_, initial_z_;
     T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
     Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
@@ -215,6 +227,7 @@ bool Solver::ReadSolutionParams(std::string file_name_) {
   initial_x_ = J["initial_x"];
   initial_y_ = J["initial_y"];
   initial_z_ = J["initial_z"];
+  cloud_scale_ = J["cloud_scale"];
   minimizer_progress_to_stdout_ = J["minimizer_progress_to_stdout"];
   max_solver_time_in_seconds_ = J["max_solver_time_in_seconds"];
   function_tolerance_ = J["function_tolerance"];

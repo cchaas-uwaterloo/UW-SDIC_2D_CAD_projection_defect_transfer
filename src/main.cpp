@@ -50,7 +50,7 @@ int main () {
     imageReader.densifyPoints(&input_points_camera, 10);
     imageReader.densifyPoints(&input_points_CAD, 10);
 
-    imageReader.scalePoints(&input_points_CAD, 0.01);
+    //imageReader.scalePoints(&input_points_CAD, 0.01);
 
     printf("points scaled \n");
 

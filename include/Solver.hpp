@@ -44,7 +44,7 @@ private:
     //initialize the ceres solver options for the problem
     std::shared_ptr<ceres::Problem> SetupCeresOptions (std::string location_);
 
-    void ScaleCloud (std::shared_ptr<beam_calibration::CameraModel> camera_model_, float scale_);
+    void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_);
 
     //load the initial T_CW to use when solving, default is identity transformation with 2000 z offset
     void LoadInitialPose (std::string location_);
@@ -73,7 +73,7 @@ private:
 
     bool minimizer_progress_to_stdout_; 
     uint32_t max_solver_time_in_seconds_;
-    double function_tolerance_, gradient_tolerance_, parameter_tolerance_;
+    double function_tolerance_, gradient_tolerance_, parameter_tolerance_, cloud_scale_;
 
     std::vector<double> results; //stores the incremental results of the ceres solution
 
