@@ -25,7 +25,7 @@ namespace cam_cad {
 
 class Util{
 public: 
-    Util(); 
+    Util(std::string camera_type_ = "ladybug"); 
     ~Util() = default; 
 
     void getCorrespondences(pcl::CorrespondencesPtr corrs_, 
@@ -48,6 +48,8 @@ public:
     Eigen::Matrix4d QuaternionAndTranslationToTransformMatrix(const std::vector<double>& pose_);
 
     void ReadCameraModel ();
+
+    void SetCameraID (uint8_t cam_ID_);
     
     Eigen::Matrix4d PerturbTransformRadM(const Eigen::Matrix4d& T_in,
                                      const Eigen::VectorXd& perturbations);
@@ -74,6 +76,7 @@ private:
     double DegToRad(double d);
 
     std::shared_ptr<beam_calibration::CameraModel> camera_model;
+    //std::shared_ptr<beam_calibration::Ladybug> camera_model;
 
     std::string camera_type;
 

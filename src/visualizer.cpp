@@ -17,7 +17,7 @@ Visualizer::~Visualizer() {
 void Visualizer::startVis() {
   point_cloud_display = boost::make_shared<pcl::visualization::PCLVisualizer> (display_name);
   point_cloud_display->setBackgroundColor (0, 0, 0);
-  point_cloud_display->addCoordinateSystem (1000);
+  point_cloud_display->addCoordinateSystem (10);
   point_cloud_display->initCameraParameters ();
 
   printf("Started Vis \n");
@@ -152,7 +152,7 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
     point_cloud_display->addPointCloud(CAD_cloud_, id_CAD_);
     point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_CAD_);
     point_cloud_display->addPointCloud(projected_cloud_, id_projected_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_projected_); 
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, id_projected_); 
     point_cloud_display->resetCamera();
   }
   //otherwise, update the existing cloud

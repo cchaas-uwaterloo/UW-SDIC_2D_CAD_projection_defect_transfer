@@ -51,6 +51,7 @@ target_link_libraries(utils
 
 target_link_libraries(solver
    beam::calibration
+   beam::optimization
    visualizer
    utils
    ${PCl_LIBRARIES}

@@ -2,9 +2,9 @@
 
 namespace cam_cad {
 
-Util::Util() {
-    camera_type = "ladybug";
-}; 
+Util::Util(std::string camera_type_) {
+    camera_type = camera_type_;
+}
 
 void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_, 
                               pcl::PointCloud<pcl::PointXYZ>::Ptr source_coud_,
@@ -31,10 +31,9 @@ void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
     // project the transformed points to the camera plane
     proj_cloud = this->ProjectCloud(trans_cloud);
-    //proj_cloud = this->projectPointsTest(trans_cloud, "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/ladybug.conf");
 
     // get correspondences
-    this->getCorrespondences(corrs_, proj_cloud, camera_cloud_, 1000000);
+    this->getCorrespondences(corrs_, proj_cloud, camera_cloud_, 1000);
 }
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW) {
@@ -102,10 +101,16 @@ void Util::ReadCameraModel () {
     if (camera_type == "ladybug") {
         std::string file_location = __FILE__;
         file_location.erase(file_location.end() - 12, file_location.end());
-        file_location += "/config/ladybug.conf";
+        file_location += "config/ladybug.conf";
         std::cout << file_location << std::endl;
         camera_model = beam_calibration::CameraModel::Create (file_location); 
+        //camera_model = std::make_shared<beam_calibration::Ladybug> (file_location);
     }
+}
+
+void Util::SetCameraID (uint8_t cam_ID_){
+    //camera_model->SetCameraID(cam_ID_);
+    
 }
 
 Eigen::Matrix4d Util::PerturbTransformRadM(const Eigen::Matrix4d& T_in,
@@ -211,4 +216,4 @@ double Util::DegToRad(double d) {
   return d * (M_PI / 180);
 }
 
-}
+} // namespace cam_cad

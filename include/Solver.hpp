@@ -12,8 +12,10 @@
 #include "imageReader.hpp"
 #include "util.hpp"
 #include "visualizer.hpp"
-#include "CeresReprojectionCostFunction.hpp"
 #include <stdio.h>
+#include "beam_optimization/CamPoseReprojectionCost.hpp"
+#include <nlohmann/json.hpp>
+#include <fstream>
 
 namespace cam_cad { 
 
@@ -27,6 +29,8 @@ public:
     bool SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
                             pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_);
 
+    bool ReadSolutionParams(std::string file_name_);
+
     Eigen::Matrix4d GetTransform();
 
 private:
@@ -39,6 +43,8 @@ private:
 
     //initialize the ceres solver options for the problem
     std::shared_ptr<ceres::Problem> SetupCeresOptions (std::string location_);
+
+    void ScaleCloud (std::shared_ptr<beam_calibration::CameraModel> camera_model_, float scale_);
 
     //load the initial T_CW to use when solving, default is identity transformation with 2000 z offset
     void LoadInitialPose (std::string location_);
@@ -56,15 +62,22 @@ private:
     std::shared_ptr<Visualizer> vis;
     std::shared_ptr<Util> util;
 
-ceres::Solver::Options ceres_solver_options_;
-std::unique_ptr<ceres::LossFunction> loss_function_;
-std::unique_ptr<ceres::LocalParameterization> se3_parameterization_;
-bool output_results_{true};
-uint8_t max_solution_iterations;
+    ceres::Solver::Options ceres_solver_options_;
+    std::unique_ptr<ceres::LossFunction> loss_function_;
+    std::unique_ptr<ceres::LocalParameterization> se3_parameterization_;
+    bool output_results_{true};
 
-std::vector<double> results; //stores the incremental results of the ceres solution
+    // Solution parameters
+    uint32_t max_solution_iterations_, max_ceres_iterations_; 
+    int32_t initial_alpha_, initial_beta_, initial_gamma_, initial_x_, initial_y_, initial_z_;
 
-std::shared_ptr<beam_calibration::CameraModel> camera_model;
+    bool minimizer_progress_to_stdout_; 
+    uint32_t max_solver_time_in_seconds_;
+    double function_tolerance_, gradient_tolerance_, parameter_tolerance_;
+
+    std::vector<double> results; //stores the incremental results of the ceres solution
+
+    std::shared_ptr<beam_calibration::CameraModel> camera_model;
 
 };
 

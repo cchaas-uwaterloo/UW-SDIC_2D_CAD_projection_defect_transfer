@@ -139,22 +139,12 @@ void ImageReader::densifyPoints (std::vector<point>* points_, uint8_t density_in
             dy = -interval*(std::sin(theta));
         }
 
-        //std::cout << "The current delta x step for these points is: " << dx
-
         //push the start point first to conserve the order of the vector 
         points_->push_back(current_start_point); 
 
         //push the rest of the interpolated points, trending toward the current end point 
-        //NOTE__  point values should not be negative, but may want to add some error checking here 
         uint16_t current_x_coord = current_start_point.x + dx; 
         uint16_t current_y_coord = current_start_point.y + dy;
-
-        // DEBUG_
-        //uint16_t og_diff_x = std::abs(current_end_point.x - current_start_point.x);
-        //uint16_t og_diff_y = std::abs(current_end_point.y - current_start_point.y);
-
-        //uint16_t cur_diff_x = std::abs(current_x_coord - current_start_point.x);
-        //uint16_t cur_diff_y = std::abs(current_y_coord - current_start_point.y);
 
         for (uint8_t i = 0; i < density_index_; i++) {
             point current_inter_point(current_x_coord,current_y_coord);

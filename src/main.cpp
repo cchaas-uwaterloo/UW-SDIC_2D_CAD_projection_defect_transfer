@@ -30,16 +30,16 @@ int main () {
 
     std::string file_location = __FILE__;
     file_location.erase(file_location.end() - 8, file_location.end());
-    std::string camera_file_location = file_location + "/P210_north.json";
-    std::string CAD_file_location = file_location + "/P210_north_crackmap.json";
+    std::string camera_file_location = file_location + "P210_north.json";
+    std::string CAD_file_location = file_location + "P210_north_crackmap.json";
     std::cout << camera_file_location << std::endl;
     std::cout << CAD_file_location << std::endl;
 
-    read_success_camera = imageReader.readPoints("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/src/P210_north.json", &input_points_camera); 
+    read_success_camera = imageReader.readPoints(camera_file_location, &input_points_camera); 
 
     if (read_success_camera) printf("camera data read success\n");
 
-    read_success_CAD = imageReader.readPoints("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/src/P210_north_crackmap.json", &input_points_CAD);
+    read_success_CAD = imageReader.readPoints(CAD_file_location, &input_points_CAD);
 
     if (read_success_CAD) printf("CAD data read success\n");
 
@@ -87,8 +87,11 @@ int main () {
     transformed_cloud = mainUtility.TransformCloud(input_cloud_CAD, T_TEST);
 
     printf("transformed cloud \n");
+    printf("updating\n");
 
     projected_cloud = mainUtility.ProjectCloud(transformed_cloud);
+
+    printf("projected cloud \n");
     
     // TEST_ determine cloud correspondences
     //mainUtility.getCorrespondences(correspondences, input_cloud_CAD, input_cloud_camera, 1000);
@@ -102,8 +105,8 @@ int main () {
     vis1.displayClouds(input_cloud_camera, transformed_cloud, projected_cloud, correspondences, "camera_cloud", "transformed_cloud", "projected_cloud");
     //vis1.displayClouds(input_cloud_camera,"camera_cloud");
     //vis1.displayClouds(projected_cloud, "Projected cloud");
+    
     */
-
     //*******************************//
 
     //Solver Block*******************//
@@ -112,7 +115,20 @@ int main () {
 
     cam_cad::Solver solver(solverVisualizer, solverUtility);
 
-    solver.SolveOptimization(input_cloud_CAD, input_cloud_camera);
+    file_location.erase(file_location.end() - 4, file_location.end());
+
+    std::string solconfig_file_location = file_location + "config/SolutionParameters.json";
+    std::cout << solconfig_file_location << std::endl;
+
+    bool params_loaded = solver.ReadSolutionParams(solconfig_file_location);
+
+    if (params_loaded)
+        solver.SolveOptimization(input_cloud_CAD, input_cloud_camera);
+    else {
+        printf("failed to load solution parameters\n");
+        printf("exiting program\n");
+        return 0;
+    }
 
     //*******************************//
 
