@@ -88,7 +88,27 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 # add test executables
+add_executable(ladybug_images_test tests/src/ladybug_images_test.cpp)
+add_dependencies(ladybug_images_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(ladybug_images_test
+  ${catkin_LIBRARIES} 
+  ${PCl_LIBRARIES}
+  image_reader 
+  visualizer 
+  utils
+  solver
+)
 
+add_executable(simulation_test tests/src/simulation_test.cpp)
+add_dependencies(simulation_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(simulation_test
+  ${catkin_LIBRARIES} 
+  ${PCl_LIBRARIES}
+  image_reader 
+  visualizer 
+  utils
+  solver
+)
 
 # Mark executables and/or libraries for installation
 install(TARGETS ${PROJECT_NAME}
