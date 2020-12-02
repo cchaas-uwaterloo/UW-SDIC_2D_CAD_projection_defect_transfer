@@ -44,7 +44,6 @@ private:
     //initialize the ceres solver options for the problem
     std::shared_ptr<ceres::Problem> SetupCeresOptions (std::string location_);
 
-    void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_);
 
     //load the initial T_CW to use when solving, default is identity transformation with 2000 z offset
     void LoadInitialPose (std::string location_);

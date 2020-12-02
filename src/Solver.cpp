@@ -20,7 +20,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     pcl::CorrespondencesPtr proj_corrs (new pcl::Correspondences); 
 
     LoadInitialPose("placeholder");
-    ScaleCloud(CAD_cloud_,cloud_scale_);
+    util_->ScaleCloud(CAD_cloud_,cloud_scale_);
 
     vis->startVis();
 
@@ -35,7 +35,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
     // blow up the transformed cloud for visualization
-    ScaleCloud(trans_cloud,(1/cloud_scale_));
+    util_->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
     // project cloud for visualizer
     proj_cloud = util->ProjectCloud(trans_cloud);
@@ -81,7 +81,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
         trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
         // blow up the transformed CAD cloud for visualization
-        ScaleCloud(trans_cloud,(1/cloud_scale_));
+        util_->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
         // project cloud for visualizer
         proj_cloud = util->ProjectCloud(trans_cloud);
@@ -133,14 +133,6 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_
                                             identity_parameterization.release()));
 
     return problem;
-}
-
-void Solver::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_) {
-    for (uint16_t i = 0; i < cloud_->size(); i++) {
-        cloud_->at(i).x *= scale_;
-        cloud_->at(i).y *= scale_;
-        cloud_->at(i).z *= scale_;
-    }
 }
 
 void Solver::LoadInitialPose (std::string location_) {

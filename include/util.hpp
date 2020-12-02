@@ -58,14 +58,16 @@ public:
                                      const Eigen::VectorXd& perturbations);
 
 
-    //TEST_ functions
-
     std::shared_ptr<beam_calibration::CameraModel> GetCameraModel();
 
     Eigen::MatrixXd RoundMatrix(const Eigen::MatrixXd& M, const int& precision);
 
     void originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
     void rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
+
+    void GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const double max_x_dim_, const double max_y_dim_);
+
+    void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_);
 
 private: 
 

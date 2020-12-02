@@ -135,7 +135,6 @@ Eigen::Matrix4d Util::PerturbTransformDegM(const Eigen::Matrix4d& T_in,
   return PerturbTransformRadM(T_in, perturbations_rad);
 }
 
-//TEST_ function
 void Util::originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     
     uint16_t num_points = cloud_->size();
@@ -189,6 +188,32 @@ void Util::rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
         uint16_t x_tmp = cloud_->at(index).x;
         cloud_->at(index).x = cloud_->at(index).y;
         cloud_->at(index).y = x_tmp; 
+    }
+}
+
+void Util::GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const double max_x_dim_, const double max_y_dim_) {
+    
+    // get max cloud dimensions in x and y
+    uint16_t max_x = 0, max_y = 0;
+    uint16_t min_x = cloud_->at(0).x, min_y = cloud_->at(0).y;
+    for(uint16_t point_index = 0; point_index < cloud_->size(); point_index++) {
+        if (cloud_->at(point_index).x > max_x) max_x = cloud_->at(point_index).x;
+        if (cloud_->at(point_index).y > max_y) max_y = cloud_->at(point_index).y;
+        if (cloud_->at(point_index).x < min_x) min_x = cloud_->at(point_index).x;
+        if (cloud_->at(point_index).y < min_y) min_y = cloud_->at(point_index).y;
+    }
+
+    // pixel/CAD unit
+    float x_scale = (max_x-min_x)/max_x_dim_;
+    float y_scale = (max_y-min_y)/max_y_dim_;
+
+}
+
+void Solver::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_) {
+    for (uint16_t i = 0; i < cloud_->size(); i++) {
+        cloud_->at(i).x *= scale_;
+        cloud_->at(i).y *= scale_;
+        cloud_->at(i).z *= scale_;
     }
 }
 
