@@ -2,9 +2,13 @@
 
 namespace cam_cad {
 
-Solver::Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_) {
+Solver::Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_, std::string config_file_name_) {
     vis = vis_;
     util = util_;
+
+    ReadSolutionParams(config_file_name_);
+
+    util->ReadCameraModel(cam_intrinsics_file_);
     camera_model = util->GetCameraModel();
 }; 
 
@@ -19,8 +23,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     // correspondence object tells the cost function which points to compare
     pcl::CorrespondencesPtr proj_corrs (new pcl::Correspondences); 
 
-    LoadInitialPose("placeholder");
-    util_->ScaleCloud(CAD_cloud_,cloud_scale_);
+    util->ScaleCloud(CAD_cloud_,cloud_scale_);
 
     vis->startVis();
 
@@ -35,7 +38,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
     // blow up the transformed cloud for visualization
-    util_->ScaleCloud(trans_cloud,(1/cloud_scale_));
+    util->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
     // project cloud for visualizer
     proj_cloud = util->ProjectCloud(trans_cloud);
@@ -49,7 +52,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
         T_CW_prev = T_CW;
 
         // initialize problem 
-        std::shared_ptr<ceres::Problem> problem = SetupCeresOptions("placeholder");
+        std::shared_ptr<ceres::Problem> problem = SetupCeresOptions();
 
         printf("Solver iteration %u \n", iterations);
 
@@ -81,7 +84,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
         trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
         // blow up the transformed CAD cloud for visualization
-        util_->ScaleCloud(trans_cloud,(1/cloud_scale_));
+        util->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
         // project cloud for visualizer
         proj_cloud = util->ProjectCloud(trans_cloud);
@@ -100,7 +103,7 @@ Eigen::Matrix4d Solver::GetTransform() {
     return T_CW;
 }
 
-std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_) {
+std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions () {
     // set ceres solver params
     ceres_solver_options_.minimizer_progress_to_stdout = true;
     ceres_solver_options_.max_num_iterations = max_ceres_iterations_;
@@ -135,16 +138,31 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions (std::string location_
     return problem;
 }
 
-void Solver::LoadInitialPose (std::string location_) {
+void Solver::LoadInitialPose (std::string file_name_) {
+
+    // load file
+    nlohmann::json J;
+    std::ifstream file(file_name_);
+    file >> J;
+
+    int32_t initial_alpha, initial_beta, initial_gamma, initial_x, initial_y, initial_z;
+
+    initial_alpha = J["pose"][0];
+    initial_beta = J["pose"][1];
+    initial_gamma = J["pose"][2];
+    initial_x = J["pose"][3];
+    initial_y = J["pose"][4];
+    initial_z = J["pose"][5];
+
     T_CW = Eigen::Matrix4d::Identity();
     Eigen::VectorXd perturbation(6, 1);
-    perturbation << initial_alpha_, 0, 0, 0, 0, 0; 
+    perturbation << initial_alpha, 0, 0, 0, 0, 0; 
     T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
-    perturbation << 0, initial_beta_, 0, 0, 0, 0;
+    perturbation << 0, initial_beta, 0, 0, 0, 0;
     T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
-    perturbation << 0, 0, initial_gamma_, 0, 0, 0;
+    perturbation << 0, 0, initial_gamma, 0, 0, 0;
     T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
-    perturbation << 0, 0, 0, initial_x_, initial_y_, initial_z_;
+    perturbation << 0, 0, 0, initial_x, initial_y, initial_z;
     T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
     Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
@@ -197,36 +215,47 @@ void Solver::SolveCeresProblem(const std::shared_ptr<ceres::Problem>& problem, b
     }
 }
 
-bool Solver::ReadSolutionParams(std::string file_name_) {
+void Solver::ReadSolutionParams(std::string file_name_) {
   // load file
   nlohmann::json J;
   std::ifstream file(file_name_);
   file >> J;
 
-  /*
-  if (!nlohmann::json::accept(file))
-  {
-    printf("Bad JSON input \n");
-    return false;
-  }
-  */
+  int32_t initial_alpha, initial_beta, initial_gamma, initial_x, initial_y, initial_z;
 
+  // read solution parameters from configuration file
   max_solution_iterations_ = J["max_solution_iterations"];
   max_ceres_iterations_ = J["max_ceres_iterations"];
-  initial_alpha_ = J["initial_alpha"];
-  initial_beta_ = J["initial_beta"];
-  initial_gamma_ = J["initial_gamma"];
-  initial_x_ = J["initial_x"];
-  initial_y_ = J["initial_y"];
-  initial_z_ = J["initial_z"];
+  initial_alpha = J["initial_alpha"];
+  initial_beta = J["initial_beta"];
+  initial_gamma = J["initial_gamma"];
+  initial_x = J["initial_x"];
+  initial_y = J["initial_y"];
+  initial_z = J["initial_z"];
   cloud_scale_ = J["cloud_scale"];
   minimizer_progress_to_stdout_ = J["minimizer_progress_to_stdout"];
   max_solver_time_in_seconds_ = J["max_solver_time_in_seconds"];
   function_tolerance_ = J["function_tolerance"];
   gradient_tolerance_ = J["gradient_tolerance"];
   parameter_tolerance_ = J["parameter_tolerance"];
+  cam_intrinsics_file_ = J["camera_intrinsics"];
 
-  return true;
+
+  // Load default initial pose
+  // default rotations are applied successively around x,y,z
+  T_CW = Eigen::Matrix4d::Identity();
+  Eigen::VectorXd perturbation(6, 1);
+  perturbation << initial_alpha, 0, 0, 0, 0, 0; 
+  T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+  perturbation << 0, initial_beta, 0, 0, 0, 0;
+  T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+  perturbation << 0, 0, initial_gamma, 0, 0, 0;
+  T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+  perturbation << 0, 0, 0, initial_x, initial_y, initial_z;
+  T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+  Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
+  Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
+  results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CW(0, 3), T_CW(1, 3), T_CW(2, 3)};
 
 }
 

@@ -88,6 +88,17 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 # add test executables
+add_executable(scale_test tests/src/cad_image_scale_test.cpp)
+add_dependencies(scale_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(scale_test
+  ${catkin_LIBRARIES} 
+  ${PCl_LIBRARIES}
+  image_reader 
+  visualizer 
+  utils
+  solver
+)
+
 add_executable(ladybug_images_test tests/src/ladybug_images_test.cpp)
 add_dependencies(ladybug_images_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(ladybug_images_test

@@ -23,15 +23,20 @@ using AlignVec2d = Eigen::aligned_allocator<Eigen::Vector2d>;
 
 class Solver{
 public: 
-    Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_); 
+    Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_, std::string config_file_name_); 
     ~Solver() = default; 
 
     bool SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
                             pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_);
 
-    bool ReadSolutionParams(std::string file_name_);
-
     Eigen::Matrix4d GetTransform();
+
+    //load the initial T_CW to use when solving from a pose json file 
+    void LoadInitialPose (std::string file_name_);
+
+    //load initial T_CW (world to camera transform) and T_WS (structure to world transform) 
+    //in this case the form of the solution is the T_CS (structure to camera transform)
+    void LoadInitialPose (std::string file_name_robot_, std::string file_name_struct_);
 
 private:
     
@@ -42,11 +47,7 @@ private:
                         pcl::PointCloud<pcl::PointXYZ>::Ptr cad_cloud_);
 
     //initialize the ceres solver options for the problem
-    std::shared_ptr<ceres::Problem> SetupCeresOptions (std::string location_);
-
-
-    //load the initial T_CW to use when solving, default is identity transformation with 2000 z offset
-    void LoadInitialPose (std::string location_);
+    std::shared_ptr<ceres::Problem> SetupCeresOptions ();
 
     //set solution options and iterate through ceres solution
     void SolveCeresProblem (const std::shared_ptr<ceres::Problem>& problem, bool output_results);
@@ -54,6 +55,11 @@ private:
     //check convergence by determining the error between the projection and 
     bool CheckConvergence(pcl::PointCloud<pcl::PointXYZ>::Ptr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr match_cloud_, 
                           pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_);
+
+    //Read solution parameters from the json configuration file, 
+    //Note that the initial pose and cad scale set here are config defaults, they can be overwritten by calling the 
+    //dedicated setters
+    void ReadSolutionParams(std::string file_name_);
 
     Eigen::Matrix4d T_CW; //world -> camera transformatin matrix
     Eigen::Matrix4d T_CW_prev; //previous iteration's world -> camera transformation matrix
@@ -68,7 +74,7 @@ private:
 
     // Solution parameters
     uint32_t max_solution_iterations_, max_ceres_iterations_; 
-    int32_t initial_alpha_, initial_beta_, initial_gamma_, initial_x_, initial_y_, initial_z_;
+    std::string cam_intrinsics_file_;
 
     bool minimizer_progress_to_stdout_; 
     uint32_t max_solver_time_in_seconds_;

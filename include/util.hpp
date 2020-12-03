@@ -47,7 +47,7 @@ public:
 
     Eigen::Matrix4d QuaternionAndTranslationToTransformMatrix(const std::vector<double>& pose_);
 
-    void ReadCameraModel ();
+    void ReadCameraModel (std::string intrinsics_file_path_);
 
     void SetCameraID (uint8_t cam_ID_);
     
@@ -65,7 +65,7 @@ public:
     void originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
     void rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
 
-    void GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const double max_x_dim_, const double max_y_dim_);
+    void GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const double max_x_dim_, const double max_y_dim_, float& x_scale_, float& y_scale_);
 
     void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_);
 

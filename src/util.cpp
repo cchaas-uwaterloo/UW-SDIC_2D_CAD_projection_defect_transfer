@@ -97,15 +97,10 @@ std::shared_ptr<beam_calibration::CameraModel> Util::GetCameraModel () {
     return camera_model;
 }
 
-void Util::ReadCameraModel () {
-    if (camera_type == "ladybug") {
-        std::string file_location = __FILE__;
-        file_location.erase(file_location.end() - 12, file_location.end());
-        file_location += "config/ladybug.conf";
-        std::cout << file_location << std::endl;
-        camera_model = beam_calibration::CameraModel::Create (file_location); 
-        //camera_model = std::make_shared<beam_calibration::Ladybug> (file_location);
-    }
+void Util::ReadCameraModel (std::string intrinsics_file_path_) {
+
+    camera_model = beam_calibration::CameraModel::Create (intrinsics_file_path_); 
+    
 }
 
 void Util::SetCameraID (uint8_t cam_ID_){
@@ -191,7 +186,7 @@ void Util::rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     }
 }
 
-void Util::GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const double max_x_dim_, const double max_y_dim_) {
+void Util::GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const double max_x_dim_, const double max_y_dim_, float& x_scale_, float& y_scale_) {
     
     // get max cloud dimensions in x and y
     uint16_t max_x = 0, max_y = 0;
@@ -203,13 +198,13 @@ void Util::GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const 
         if (cloud_->at(point_index).y < min_y) min_y = cloud_->at(point_index).y;
     }
 
-    // pixel/CAD unit
-    float x_scale = (max_x-min_x)/max_x_dim_;
-    float y_scale = (max_y-min_y)/max_y_dim_;
+    // CAD unit/pixel 
+    x_scale_ = max_x_dim_/(max_x-min_x);
+    y_scale_ = max_y_dim_/(max_y-min_y);
 
 }
 
-void Solver::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_) {
+void Util::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_) {
     for (uint16_t i = 0; i < cloud_->size(); i++) {
         cloud_->at(i).x *= scale_;
         cloud_->at(i).y *= scale_;

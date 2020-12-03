@@ -108,23 +108,13 @@ int main () {
     //*******************************//
 
     //Solver Block*******************//
-    
-    solverUtility->ReadCameraModel();
 
-    cam_cad::Solver solver(solverVisualizer, solverUtility);
+    std::string config_file_location = "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/SolutionParameters.json";
 
-    std::string solconfig_file_location = "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/SolutionParameters.json";
-    std::cout << solconfig_file_location << std::endl;
+    cam_cad::Solver solver(solverVisualizer, solverUtility, config_file_location);
 
-    bool params_loaded = solver.ReadSolutionParams(solconfig_file_location);
+    solver.SolveOptimization(input_cloud_CAD, input_cloud_camera);
 
-    if (params_loaded)
-        solver.SolveOptimization(input_cloud_CAD, input_cloud_camera);
-    else {
-        printf("failed to load solution parameters\n");
-        printf("exiting program\n");
-        return 0;
-    }
 
     //*******************************//
 
