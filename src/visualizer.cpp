@@ -1,4 +1,5 @@
 #include "visualizer.hpp"
+#include <stdio.h>
 
 namespace cam_cad {
 
@@ -14,10 +15,10 @@ Visualizer::~Visualizer() {
 
 }
 
-void Visualizer::startVis() {
+void Visualizer::startVis(uint16_t coord_size) {
   point_cloud_display = boost::make_shared<pcl::visualization::PCLVisualizer> (display_name);
   point_cloud_display->setBackgroundColor (0, 0, 0);
-  point_cloud_display->addCoordinateSystem (1000);
+  point_cloud_display->addCoordinateSystem (coord_size);
   point_cloud_display->initCameraParameters ();
 
   printf("Started Vis \n");
@@ -169,10 +170,6 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
   uint16_t line_start_index = 0, line_end_index = 1; 
   uint16_t line_id = 0;
 
-  printf("clouds added to visualizer \n");
-
-  //printf("%n correspondences to add \n", corrs_->size());
-
   //illustrate correspondences
   for (uint16_t i = 0; i < corrs_->size(); i++) {
 
@@ -184,7 +181,10 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
     line_start_index += 2;
     line_end_index += 2;
     line_id ++;
+
   }
+
+  printf("correspondences added to visualizer \n");
 
   mtx.unlock();
 

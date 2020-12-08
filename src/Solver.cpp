@@ -37,19 +37,16 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     // transformed cloud is only for the visualizer, the actual ceres solution takes just teh original CAD cloud and the iterative results 
     trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
-    // blow up the transformed cloud for visualization
-    util->ScaleCloud(trans_cloud,(1/cloud_scale_));
-
     // project cloud for visualizer
     proj_cloud = util->ProjectCloud(trans_cloud);
+
+    // blow up the transformed cloud for visualization
+    util->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
     printf("ready to start optimization \n");
 
     // loop problem until it has converged 
     while (!has_converged && iterations < max_solution_iterations_) {
-
-        //set previous iteration transform value
-        T_CW_prev = T_CW;
 
         // initialize problem 
         std::shared_ptr<ceres::Problem> problem = SetupCeresOptions();
@@ -83,11 +80,11 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
         // update the position of the transformed cloud based on the upated transformation matrix for visualization
         trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
 
-        // blow up the transformed CAD cloud for visualization
-        util->ScaleCloud(trans_cloud,(1/cloud_scale_));
-
         // project cloud for visualizer
         proj_cloud = util->ProjectCloud(trans_cloud);
+
+        // blow up the transformed CAD cloud for visualization
+        util->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
         iterations ++;
 

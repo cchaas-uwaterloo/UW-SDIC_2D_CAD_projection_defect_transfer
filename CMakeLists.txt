@@ -110,6 +110,17 @@ target_link_libraries(ladybug_images_test
   solver
 )
 
+add_executable(load_pose_test tests/src/load_pose_test.cpp)
+add_dependencies(load_pose_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(load_pose_test
+  ${catkin_LIBRARIES} 
+  ${PCl_LIBRARIES}
+  image_reader 
+  visualizer 
+  utils
+  solver
+)
+
 add_executable(simulation_test tests/src/simulation_test.cpp)
 add_dependencies(simulation_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(simulation_test

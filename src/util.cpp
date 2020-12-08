@@ -2,9 +2,7 @@
 
 namespace cam_cad {
 
-Util::Util(std::string camera_type_) {
-    camera_type = camera_type_;
-}
+Util::Util() {}
 
 void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_, 
                               pcl::PointCloud<pcl::PointXYZ>::Ptr source_coud_,
@@ -93,13 +91,22 @@ Eigen::Matrix4d Util::QuaternionAndTranslationToTransformMatrix(const std::vecto
     return T;
 }
 
+std::vector<double> Util::TransformMatrixToQuaternionAndTranslation(const Eigen::Matrix4d& T) {
+  Eigen::Matrix3d R = T.block(0, 0, 3, 3);
+  Eigen::Quaternion<double> q = Eigen::Quaternion<double>(R);
+  std::vector<double> pose{q.w(),   q.x(),   q.y(),  q.z(),
+                           T(0, 3), T(1, 3), T(2, 3)};
+}
+
 std::shared_ptr<beam_calibration::CameraModel> Util::GetCameraModel () {
     return camera_model;
 }
 
 void Util::ReadCameraModel (std::string intrinsics_file_path_) {
-
-    camera_model = beam_calibration::CameraModel::Create (intrinsics_file_path_); 
+    printf("reading camera intrinsics \n");
+    camera_model = beam_calibration::CameraModel::Create(intrinsics_file_path_); 
+    //camera_model = std::make_shared<beam_calibration::Radtan>(intrinsics_file_path_);
+    printf("read camera intrinsics \n");
     
 }
 
@@ -134,20 +141,20 @@ void Util::originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     
     uint16_t num_points = cloud_->size();
 
-    // determine average x and y values
-    uint32_t avg_x = 0, avg_y = 0;
+    // determine central x and y values
+    float avg_x = 0, avg_y = 0;
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
-        avg_x += cloud_->at(point_index).x; 
-        avg_y += cloud_->at(point_index).y; 
+        if (cloud_->at(point_index).x > avg_x) avg_x = cloud_->at(point_index).x; 
+        if (cloud_->at(point_index).y > avg_y) avg_y = cloud_->at(point_index).y; 
     }
 
-    avg_x /= num_points;
-    avg_y /= num_points;
+    avg_x /= 2;
+    avg_y /= 2;
 
-    // shift all points back to abutt origin
+    // shift all points back to center on origin
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
-        cloud_->at(point_index).x -= avg_x;
-        cloud_->at(point_index).y -= avg_y;
+        cloud_->at(point_index).x -= (int)avg_x;
+        cloud_->at(point_index).y -= (int)avg_y;
     }
 
 }
@@ -189,8 +196,8 @@ void Util::rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
 void Util::GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const double max_x_dim_, const double max_y_dim_, float& x_scale_, float& y_scale_) {
     
     // get max cloud dimensions in x and y
-    uint16_t max_x = 0, max_y = 0;
-    uint16_t min_x = cloud_->at(0).x, min_y = cloud_->at(0).y;
+    float max_x = 0, max_y = 0;
+    float min_x = cloud_->at(0).x, min_y = cloud_->at(0).y;
     for(uint16_t point_index = 0; point_index < cloud_->size(); point_index++) {
         if (cloud_->at(point_index).x > max_x) max_x = cloud_->at(point_index).x;
         if (cloud_->at(point_index).y > max_y) max_y = cloud_->at(point_index).y;
@@ -210,6 +217,73 @@ void Util::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_)
         cloud_->at(i).y *= scale_;
         cloud_->at(i).z *= scale_;
     }
+}
+
+void Util::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float x_scale_, float y_scale_) {
+    for (uint16_t i = 0; i < cloud_->size(); i++) {
+        cloud_->at(i).x *= x_scale_;
+        cloud_->at(i).y *= y_scale_;
+    }
+}
+
+void Util::LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool structure_) {
+    // load file
+    nlohmann::json J;
+    std::ifstream file(file_name_);
+    file >> J;
+
+    // initial pose
+    double w_initial_pose [6]; // x, y, z, alpha, beta, gamma
+    double c_initial_pose [6]; // x, y, z, alpha, beta, gamma 
+
+    w_initial_pose[0] = J["pose"][0];
+    w_initial_pose[1] = J["pose"][1];
+    w_initial_pose[2] = J["pose"][2];
+    w_initial_pose[3] = J["pose"][3];
+    w_initial_pose[4] = J["pose"][4];
+    w_initial_pose[5] = J["pose"][5];
+
+    // remap translations and rotations
+    RemapWorldtoCameraCoords(w_initial_pose, c_initial_pose);
+
+    if (structure_ == false) {
+        // construct the matrix describing the transformation from the world to the camera frame
+        Eigen::VectorXd perturbation(6, 1);
+        perturbation << -c_initial_pose[3], 0, 0, 0, 0, 0; 
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, -c_initial_pose[4], 0, 0, 0, 0;
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, 0, -c_initial_pose[5], 0, 0, 0;
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, 0, 0, -c_initial_pose[0], -c_initial_pose[1], -c_initial_pose[2];
+        T_ = PerturbTransformDegM(T_, perturbation); 
+    }
+    else {
+        // construct the matrix describing the transformation from the structure frame to the world frame
+        Eigen::VectorXd perturbation(6, 1);
+        perturbation << c_initial_pose[3], 0, 0, 0, 0, 0; 
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, c_initial_pose[4], 0, 0, 0, 0;
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, 0, c_initial_pose[5], 0, 0, 0;
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, 0, 0, c_initial_pose[0], c_initial_pose[1], c_initial_pose[2];
+        T_ = PerturbTransformDegM(T_, perturbation); 
+    }
+
+
+    printf("loaded initial camera transformation\n");
+    std::string sep = "\n----------------------------------------\n";
+    std::cout << T_ << sep;
+}
+
+void Util::RemapWorldtoCameraCoords (const double (&world_transform)[6], double (&camera_transform)[6]) {
+    camera_transform[0] = world_transform[1]; // y -> x
+    camera_transform[1] = -world_transform[2]; // z -> -y
+    camera_transform[2] = world_transform[0]; // x -> z
+    camera_transform[4] = world_transform[5]; // beta -> alpha
+    camera_transform[5] = -world_transform[6]; // gamma -> -beta ??
+    camera_transform[6] = world_transform[4]; // alpha -> gamma
 }
 
 // Private functions

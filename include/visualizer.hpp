@@ -56,7 +56,7 @@ public:
                             std::string id_projected_);
 
     //starts the visualizer without any point clouds in the vis_thread by calling the spin method 
-    void startVis(); 
+    void startVis(uint16_t coord_size = 100); 
     void endVis();
 
 private: 

@@ -11,13 +11,17 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/console/parse.h>
 #include <pcl/registration/correspondence_estimation.h>
-#include "beam_calibration/CameraModel.h"
+#include <beam_calibration/CameraModel.h>
 #include <beam_calibration/Ladybug.h>
+#include <beam_calibration/Radtan.h>
+#include <beam_calibration/DoubleSphere.h>
+#include <beam_calibration/KannalaBrandt.h>
 #include <string>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <stdio.h>
 #include <optional>
+#include <nlohmann/json.hpp>
 
 namespace cam_cad { 
 
@@ -25,7 +29,7 @@ namespace cam_cad {
 
 class Util{
 public: 
-    Util(std::string camera_type_ = "ladybug"); 
+    Util(); 
     ~Util() = default; 
 
     void getCorrespondences(pcl::CorrespondencesPtr corrs_, 
@@ -47,6 +51,10 @@ public:
 
     Eigen::Matrix4d QuaternionAndTranslationToTransformMatrix(const std::vector<double>& pose_);
 
+    std::vector<double> TransformMatrixToQuaternionAndTranslation(const Eigen::Matrix4d& T);
+
+    std::shared_ptr<beam_calibration::CameraModel> GetCameraModel();
+
     void ReadCameraModel (std::string intrinsics_file_path_);
 
     void SetCameraID (uint8_t cam_ID_);
@@ -58,8 +66,6 @@ public:
                                      const Eigen::VectorXd& perturbations);
 
 
-    std::shared_ptr<beam_calibration::CameraModel> GetCameraModel();
-
     Eigen::MatrixXd RoundMatrix(const Eigen::MatrixXd& M, const int& precision);
 
     void originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
@@ -68,6 +74,12 @@ public:
     void GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const double max_x_dim_, const double max_y_dim_, float& x_scale_, float& y_scale_);
 
     void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_);
+
+    void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float x_scale_, float y_scale_);
+
+    void LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool structure_ = false);
+
+    void RemapWorldtoCameraCoords (const double (&world_transform)[6], double (&camera_transform)[6]);
 
 private: 
 
@@ -78,10 +90,6 @@ private:
     double DegToRad(double d);
 
     std::shared_ptr<beam_calibration::CameraModel> camera_model;
-    //std::shared_ptr<beam_calibration::Ladybug> camera_model;
-
-    std::string camera_type;
-
 
 };
 
