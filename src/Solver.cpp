@@ -25,17 +25,18 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
     util->ScaleCloud(CAD_cloud_,cloud_scale_);
 
-    vis->startVis();
+    if (visualize_)
+        vis->startVis();
 
     // transform, project, and get correspondences
-    util->CorrEst(CAD_cloud_, camera_cloud_, T_CW, proj_corrs);
+    util->CorrEst(CAD_cloud_, camera_cloud_, T_CS, proj_corrs);
 
     printf("initial pose: \n");
     std::string sep = "\n----------------------------------------\n";
-    std::cout << T_CW << sep;
+    std::cout << T_CS << sep;
 
     // transformed cloud is only for the visualizer, the actual ceres solution takes just teh original CAD cloud and the iterative results 
-    trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
+    trans_cloud = util->TransformCloud(CAD_cloud_, T_CS);
 
     // project cloud for visualizer
     proj_cloud = util->ProjectCloud(trans_cloud);
@@ -48,20 +49,25 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     // loop problem until it has converged 
     while (!has_converged && iterations < max_solution_iterations_) {
 
+        iterations ++;
+
         // initialize problem 
         std::shared_ptr<ceres::Problem> problem = SetupCeresOptions();
 
         printf("Solver iteration %u \n", iterations);
 
-        vis->displayClouds(camera_cloud_, trans_cloud, proj_cloud, proj_corrs, "camera_cloud", "transformed_cloud", "projected_cloud");
+        if (visualize_)
+        {
+            vis->displayClouds(camera_cloud_, trans_cloud, proj_cloud, proj_corrs, "camera_cloud", "transformed_cloud", "projected_cloud");
 
-        char end = ' ';
+            char end = ' ';
 
-        while (end != 'n' && end != 'r') {
-            cin >> end; 
+            while (end != 'n' && end != 'r') {
+                cin >> end; 
+            }
+
+            if (end == 'r') return false;
         }
-
-        if (end == 'r') return false;
 
         BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, CAD_cloud_);
 
@@ -69,16 +75,16 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
 
         SolveCeresProblem(problem, true);
 
-        T_CW = util->QuaternionAndTranslationToTransformMatrix(results);
+        T_CS = util->QuaternionAndTranslationToTransformMatrix(results);
 
         std::string sep = "\n----------------------------------------\n";
-        std::cout << T_CW << sep;
+        std::cout << T_CS << sep;
 
         // transform, project, and get correspondences
-        util->CorrEst(CAD_cloud_, camera_cloud_, T_CW, proj_corrs);
+        util->CorrEst(CAD_cloud_, camera_cloud_, T_CS, proj_corrs);
 
         // update the position of the transformed cloud based on the upated transformation matrix for visualization
-        trans_cloud = util->TransformCloud(CAD_cloud_, T_CW);
+        trans_cloud = util->TransformCloud(CAD_cloud_, T_CS);
 
         // project cloud for visualizer
         proj_cloud = util->ProjectCloud(trans_cloud);
@@ -86,18 +92,18 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
         // blow up the transformed CAD cloud for visualization
         util->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
-        iterations ++;
+        has_converged = CheckConvergence(proj_cloud, camera_cloud_, proj_corrs, convergence_limit_);
 
-        //has_converged = CheckConvergence(proj_cloud, camera_cloud_, proj_corrs, 20);
     }
 
-    vis->endVis();
+    if (visualize_)
+        vis->endVis();
     if (has_converged) return true;
     else return false;
 }
 
 Eigen::Matrix4d Solver::GetTransform() {
-    return T_CW;
+    return T_CS;
 }
 
 std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions () {
@@ -151,24 +157,42 @@ void Solver::LoadInitialPose (std::string file_name_) {
     initial_y = J["pose"][4];
     initial_z = J["pose"][5];
 
-    T_CW = Eigen::Matrix4d::Identity();
+    T_CS = Eigen::Matrix4d::Identity();
     Eigen::VectorXd perturbation(6, 1);
     perturbation << initial_alpha, 0, 0, 0, 0, 0; 
-    T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+    T_CS = util->PerturbTransformDegM(T_CS, perturbation); 
     perturbation << 0, initial_beta, 0, 0, 0, 0;
-    T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+    T_CS = util->PerturbTransformDegM(T_CS, perturbation); 
     perturbation << 0, 0, initial_gamma, 0, 0, 0;
-    T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+    T_CS = util->PerturbTransformDegM(T_CS, perturbation); 
     perturbation << 0, 0, 0, initial_x, initial_y, initial_z;
-    T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
-    Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
+    T_CS = util->PerturbTransformDegM(T_CS, perturbation); 
+    Eigen::Matrix3d R1 = T_CS.block(0, 0, 3, 3);
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
-    results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CW(0, 3), T_CW(1, 3), T_CW(2, 3)};
+    results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
     printf("loaded initial pose\n");
     std::string sep = "\n----------------------------------------\n";
-    std::cout << T_CW << sep;
+    std::cout << T_CS << sep;
 
+}
+
+void Solver::LoadInitialPose (std::string file_name_robot_, std::string file_name_struct_) {
+    Eigen::Matrix4d T_CW = Eigen::Matrix4d::Identity(); //world to camera transform
+    Eigen::Matrix4d T_WS = Eigen::Matrix4d::Identity(); //structure to world transform 
+
+    util->LoadInitialPose (file_name_robot_, T_CW);
+    util->LoadInitialPose (file_name_struct_, T_WS, true);
+
+    T_CS = T_CW * T_WS; 
+
+    Eigen::Matrix3d R1 = T_CS.block(0, 0, 3, 3);
+    Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
+    results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
+
+    printf("loaded initial pose\n");
+    std::string sep = "\n----------------------------------------\n";
+    std::cout << T_CS << sep;
 }
 
 void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::CorrespondencesPtr corrs_,
@@ -212,6 +236,35 @@ void Solver::SolveCeresProblem(const std::shared_ptr<ceres::Problem>& problem, b
     }
 }
 
+bool Solver::CheckConvergence(pcl::PointCloud<pcl::PointXYZ>::Ptr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr match_cloud_, 
+                          pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_) {
+
+  float pixel_error = 0;
+    
+  for (uint16_t i = 0; i < corrs_->size(); i++) {
+
+    uint16_t proj_point_index = corrs_->at(i).index_query;
+    uint16_t cam_point_index = corrs_->at(i).index_match;
+
+    float error_x = query_cloud_->at(proj_point_index).x - match_cloud_->at(cam_point_index).x;
+    float error_y = query_cloud_->at(proj_point_index).y - match_cloud_->at(cam_point_index).y;
+
+    pixel_error += sqrt(pow(error_x,2) + pow(error_y,2));
+
+  }
+
+  // average pixel error
+  pixel_error /= corrs_->size();
+
+  printf ("the average pixel error is: %f\n", pixel_error);
+
+  if (pixel_error <= pixel_threshold_)
+    return true;
+
+  return false;
+
+}
+
 void Solver::ReadSolutionParams(std::string file_name_) {
   // load file
   nlohmann::json J;
@@ -223,6 +276,7 @@ void Solver::ReadSolutionParams(std::string file_name_) {
   // read solution parameters from configuration file
   max_solution_iterations_ = J["max_solution_iterations"];
   max_ceres_iterations_ = J["max_ceres_iterations"];
+  convergence_limit_ = J["convergence_limit"];
   initial_alpha = J["initial_alpha"];
   initial_beta = J["initial_beta"];
   initial_gamma = J["initial_gamma"];
@@ -236,23 +290,24 @@ void Solver::ReadSolutionParams(std::string file_name_) {
   gradient_tolerance_ = J["gradient_tolerance"];
   parameter_tolerance_ = J["parameter_tolerance"];
   cam_intrinsics_file_ = J["camera_intrinsics"];
+  visualize_ = J["visualize"];
 
 
   // Load default initial pose
   // default rotations are applied successively around x,y,z
-  T_CW = Eigen::Matrix4d::Identity();
+  T_CS = Eigen::Matrix4d::Identity();
   Eigen::VectorXd perturbation(6, 1);
   perturbation << initial_alpha, 0, 0, 0, 0, 0; 
-  T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+  T_CS = util->PerturbTransformDegM(T_CS, perturbation); 
   perturbation << 0, initial_beta, 0, 0, 0, 0;
-  T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+  T_CS = util->PerturbTransformDegM(T_CS, perturbation); 
   perturbation << 0, 0, initial_gamma, 0, 0, 0;
-  T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
+  T_CS = util->PerturbTransformDegM(T_CS, perturbation); 
   perturbation << 0, 0, 0, initial_x, initial_y, initial_z;
-  T_CW = util->PerturbTransformDegM(T_CW, perturbation); 
-  Eigen::Matrix3d R1 = T_CW.block(0, 0, 3, 3);
+  T_CS = util->PerturbTransformDegM(T_CS, perturbation); 
+  Eigen::Matrix3d R1 = T_CS.block(0, 0, 3, 3);
   Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
-  results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CW(0, 3), T_CW(1, 3), T_CW(2, 3)};
+  results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
 }
 

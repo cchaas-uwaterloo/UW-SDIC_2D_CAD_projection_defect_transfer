@@ -278,7 +278,7 @@ void Util::LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool st
 }
 
 void Util::RemapWorldtoCameraCoords (const double (&world_transform)[6], double (&camera_transform)[6]) {
-    camera_transform[0] = world_transform[1]; // y -> x
+    camera_transform[0] = -world_transform[1]; // y -> -x
     camera_transform[1] = -world_transform[2]; // z -> -y
     camera_transform[2] = world_transform[0]; // x -> z
     camera_transform[4] = world_transform[5]; // beta -> alpha

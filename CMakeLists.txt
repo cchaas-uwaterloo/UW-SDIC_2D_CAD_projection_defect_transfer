@@ -99,6 +99,17 @@ target_link_libraries(scale_test
   solver
 )
 
+add_executable(convergence_test tests/src/convergence_check_test.cpp)
+add_dependencies(convergence_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(convergence_test
+  ${catkin_LIBRARIES} 
+  ${PCl_LIBRARIES}
+  image_reader 
+  visualizer 
+  utils
+  solver
+)
+
 add_executable(ladybug_images_test tests/src/ladybug_images_test.cpp)
 add_dependencies(ladybug_images_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(ladybug_images_test

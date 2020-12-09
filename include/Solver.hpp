@@ -31,10 +31,10 @@ public:
 
     Eigen::Matrix4d GetTransform();
 
-    //load the initial T_CW to use when solving from a pose json file 
+    //load the initial T_CS to use when solving from a pose json file 
     void LoadInitialPose (std::string file_name_);
 
-    //load initial T_CW (world to camera transform) and T_WS (structure to world transform) 
+    //load initial T_CS (world to camera transform) and T_WS (structure to world transform) 
     //in this case the form of the solution is the T_CS (structure to camera transform)
     void LoadInitialPose (std::string file_name_robot_, std::string file_name_struct_);
 
@@ -52,7 +52,7 @@ private:
     //set solution options and iterate through ceres solution
     void SolveCeresProblem (const std::shared_ptr<ceres::Problem>& problem, bool output_results);
 
-    //check convergence by determining the error between the projection and 
+    //check convergence by determining the error between the projection and image (query = projection, match = camera)
     bool CheckConvergence(pcl::PointCloud<pcl::PointXYZ>::Ptr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr match_cloud_, 
                           pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_);
 
@@ -61,8 +61,7 @@ private:
     //dedicated setters
     void ReadSolutionParams(std::string file_name_);
 
-    Eigen::Matrix4d T_CW; //world -> camera transformatin matrix
-    Eigen::Matrix4d T_CW_prev; //previous iteration's world -> camera transformation matrix
+    Eigen::Matrix4d T_CS; //structure -> camera transformatin matrix
 
     std::shared_ptr<Visualizer> vis;
     std::shared_ptr<Util> util;
@@ -76,9 +75,9 @@ private:
     uint32_t max_solution_iterations_, max_ceres_iterations_; 
     std::string cam_intrinsics_file_;
 
-    bool minimizer_progress_to_stdout_; 
+    bool minimizer_progress_to_stdout_, visualize_; 
     uint32_t max_solver_time_in_seconds_;
-    double function_tolerance_, gradient_tolerance_, parameter_tolerance_, cloud_scale_;
+    double function_tolerance_, gradient_tolerance_, parameter_tolerance_, cloud_scale_, convergence_limit_;
 
     std::vector<double> results; //stores the incremental results of the ceres solution
 
