@@ -44,6 +44,9 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     // blow up the transformed cloud for visualization
     util->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
+    // set initial error before optimizing
+    SetInitialPixelError(proj_cloud, camera_cloud_, proj_corrs);
+
     printf("ready to start optimization \n");
 
     // loop problem until it has converged 
@@ -92,7 +95,8 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
         // blow up the transformed CAD cloud for visualization
         util->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
-        has_converged = CheckConvergence(proj_cloud, camera_cloud_, proj_corrs, convergence_limit_);
+        if (convergence_type_ == "pixel")
+            has_converged = CheckPixelConvergence(proj_cloud, camera_cloud_, proj_corrs, convergence_limit_);
 
     }
 
@@ -139,6 +143,19 @@ std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions () {
                                             identity_parameterization.release()));
 
     return problem;
+}
+
+void Solver::LoadInitialPose (Eigen::Matrix4d &T_) {
+    T_CS = T_;
+
+    Eigen::Matrix3d R1 = T_CS.block(0, 0, 3, 3);
+    Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
+    results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
+
+    printf("loaded initial pose\n");
+    std::string sep = "\n----------------------------------------\n";
+    std::cout << T_CS << sep;
+
 }
 
 void Solver::LoadInitialPose (std::string file_name_) {
@@ -195,6 +212,28 @@ void Solver::LoadInitialPose (std::string file_name_robot_, std::string file_nam
     std::cout << T_CS << sep;
 }
 
+void Solver::TransformPose (std::string file_name_, bool inverted_) {
+    
+    util->TransformPose(file_name_, T_CS, inverted_);
+
+    Eigen::Matrix3d R1 = T_CS.block(0, 0, 3, 3);
+    Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
+    results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
+
+    printf("updated initial pose\n");
+    std::string sep = "\n----------------------------------------\n";
+    std::cout << T_CS << sep;
+
+}
+
+void Solver::SetMaxMinimizerIterations (uint16_t max_iter_) {
+    max_ceres_iterations_ = max_iter_;
+}
+
+double Solver::GetInitialPixelError () {
+    return initial_projection_error_;
+}
+
 void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::CorrespondencesPtr corrs_,
                           const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
                           pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
@@ -236,7 +275,7 @@ void Solver::SolveCeresProblem(const std::shared_ptr<ceres::Problem>& problem, b
     }
 }
 
-bool Solver::CheckConvergence(pcl::PointCloud<pcl::PointXYZ>::Ptr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr match_cloud_, 
+bool Solver::CheckPixelConvergence(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
                           pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_) {
 
   float pixel_error = 0;
@@ -291,6 +330,7 @@ void Solver::ReadSolutionParams(std::string file_name_) {
   parameter_tolerance_ = J["parameter_tolerance"];
   cam_intrinsics_file_ = J["camera_intrinsics"];
   visualize_ = J["visualize"];
+  convergence_type_ = J["convergence_type"];
 
 
   // Load default initial pose
@@ -308,6 +348,29 @@ void Solver::ReadSolutionParams(std::string file_name_) {
   Eigen::Matrix3d R1 = T_CS.block(0, 0, 3, 3);
   Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
   results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
+
+}
+
+void Solver::SetInitialPixelError(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
+                          pcl::CorrespondencesPtr corrs_) {
+    double pixel_error = 0;
+    
+    for (uint16_t i = 0; i < corrs_->size(); i++) {
+
+        uint16_t proj_point_index = corrs_->at(i).index_query;
+        uint16_t cam_point_index = corrs_->at(i).index_match;
+
+        double error_x = query_cloud_->at(proj_point_index).x - match_cloud_->at(cam_point_index).x;
+        double error_y = query_cloud_->at(proj_point_index).y - match_cloud_->at(cam_point_index).y;
+
+        pixel_error += sqrt(pow(error_x,2) + pow(error_y,2));
+
+    }
+
+    // average pixel error
+    pixel_error /= corrs_->size();
+
+    initial_projection_error_ = pixel_error;
 
 }
 

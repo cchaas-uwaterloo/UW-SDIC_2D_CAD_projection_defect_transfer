@@ -31,12 +31,22 @@ public:
 
     Eigen::Matrix4d GetTransform();
 
+    void LoadInitialPose (Eigen::Matrix4d &T_);
+
     //load the initial T_CS to use when solving from a pose json file 
     void LoadInitialPose (std::string file_name_);
 
-    //load initial T_CS (world to camera transform) and T_WS (structure to world transform) 
+    //load initial T_CW (world to camera transform) and T_WS (structure to world transform) 
     //in this case the form of the solution is the T_CS (structure to camera transform)
     void LoadInitialPose (std::string file_name_robot_, std::string file_name_struct_);
+
+    // used to apply an additional transform to the initial pose 
+    // for example, when the initial pose is given in terms of the robot base, here the base -> camera transform can be applied
+    void TransformPose (std::string file_name_, bool inverted_ = false);
+
+    void SetMaxMinimizerIterations (uint16_t max_iter_);
+
+    double GetInitialPixelError ();
 
 private:
     
@@ -52,14 +62,19 @@ private:
     //set solution options and iterate through ceres solution
     void SolveCeresProblem (const std::shared_ptr<ceres::Problem>& problem, bool output_results);
 
+    // TODO add transform convergence check with a given initial transform
+
     //check convergence by determining the error between the projection and image (query = projection, match = camera)
-    bool CheckConvergence(pcl::PointCloud<pcl::PointXYZ>::Ptr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::Ptr match_cloud_, 
+    bool CheckPixelConvergence(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
                           pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_);
 
     //Read solution parameters from the json configuration file, 
     //Note that the initial pose and cad scale set here are config defaults, they can be overwritten by calling the 
     //dedicated setters
     void ReadSolutionParams(std::string file_name_);
+
+    void SetInitialPixelError(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
+                          pcl::CorrespondencesPtr corrs_);
 
     Eigen::Matrix4d T_CS; //structure -> camera transformatin matrix
 
@@ -73,11 +88,13 @@ private:
 
     // Solution parameters
     uint32_t max_solution_iterations_, max_ceres_iterations_; 
-    std::string cam_intrinsics_file_;
+    std::string cam_intrinsics_file_, convergence_type_;
 
     bool minimizer_progress_to_stdout_, visualize_; 
     uint32_t max_solver_time_in_seconds_;
     double function_tolerance_, gradient_tolerance_, parameter_tolerance_, cloud_scale_, convergence_limit_;
+
+    double initial_projection_error_;
 
     std::vector<double> results; //stores the incremental results of the ceres solution
 

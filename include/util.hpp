@@ -77,8 +77,16 @@ public:
 
     void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float x_scale_, float y_scale_);
 
+    // TODO remove this function, can just use the generalised transformed pose function 
     void LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool structure_ = false);
 
+    // updates the initial pose by an additional transformation
+    // for example, can be used if the initial pose is given for the robot base to transform into the camera frame
+    // the given relatve pose is in the world coordinate set and the returned transformation is in the camera coordinate set
+    void TransformPose (std::string file_name_, Eigen::Matrix4d &T_, bool inverted_ = false);
+
+    // TODO remove this function, can just use the generalised transform pose function
+    // can update the robot -> camera transformation file to include the necesary rotations or just create a new one
     void RemapWorldtoCameraCoords (const double (&world_transform)[6], double (&camera_transform)[6]);
 
 private: 

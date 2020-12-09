@@ -18,18 +18,19 @@
 */
 
 
+
+void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera_, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD_);
+
+cam_cad::ImageReader imageReader;
+cam_cad::Util mainUtility;
+std::vector<cam_cad::point> input_points_camera, input_points_CAD; 
+pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera (new pcl::PointCloud<pcl::PointXYZ>);
+pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD (new pcl::PointCloud<pcl::PointXYZ>);
+
+
 int main () {
 
     printf("Started... \n");
-    
-    cam_cad::ImageReader imageReader;
-    cam_cad::Util mainUtility;
-    std::shared_ptr<cam_cad::Util> solverUtility (new cam_cad::Util);
-    cam_cad::Visualizer vis1("visualizer");
-    std::shared_ptr<cam_cad::Visualizer> solverVisualizer (new cam_cad::Visualizer ("solution visualizer"));
-    std::vector<cam_cad::point> input_points_camera, input_points_CAD; 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD (new pcl::PointCloud<pcl::PointXYZ>);
 
     //image and CAD data input block//
 
@@ -67,9 +68,22 @@ int main () {
     
     mainUtility.originCloudxy(input_cloud_CAD);
 
+    //Perfect inits for each test pose********//
+    // Perfect init # 1 (-1,-1)
+    Eigen::Matrix4d perfect_init_one;
+    perfect_init_one <<     0.999717,   0.00255823,    0.0236701,    -0.843579,
+                        -0.000201718,     0.995085,   -0.0990278,     -1.32106,
+                            -0.0238071,    0.0989949,     0.994803,      9.63384,
+                            0,            0,            0,            1;
 
-    //Solver Block*******************//
 
+
+    return 0;
+}
+
+void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera_, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD_) {
+    
+    //check initial pose with default solution settings 
     std::string config_file_location = "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/SolutionParameters.json";
 
     cam_cad::Solver solver(solverVisualizer, solverUtility, config_file_location);
@@ -77,7 +91,6 @@ int main () {
     solver.LoadInitialPose("/home/cameron/wkrpt300_images/testing/poses/-1.000000_-1.000000.json", 
                            "/home/cameron/wkrpt300_images/testing/poses/struct_world.json");
 
-    // robot -> camera 
     solver.TransformPose("/home/cameron/wkrpt300_images/testing/poses/camera_robot.json");
 
     bool convergence = solver.SolveOptimization(input_cloud_CAD, input_cloud_camera);
@@ -94,18 +107,5 @@ int main () {
 
 
     //*******************************//
-
-    char end = ' ';
-
-    while (end != 'r') {
-        cin >> end; 
-    }
-
-    vis1.endVis();
-
-    printf("exiting program \n");
-
-
-    return 0;
 }
 

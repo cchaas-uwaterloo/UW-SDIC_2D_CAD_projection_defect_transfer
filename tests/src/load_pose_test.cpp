@@ -50,14 +50,16 @@ int main () {
 
     util->ScaleCloud(input_cloud_CAD, x_scale, y_scale);
 
-    Eigen::Matrix4d T_CW = Eigen::Matrix4d::Identity(); //world to camera transform
-    Eigen::Matrix4d T_WS = Eigen::Matrix4d::Identity(); //structure to world transform 
+    Eigen::Matrix4d T_CR = Eigen::Matrix4d::Identity(); // robot to camera transform
+    Eigen::Matrix4d T_RW = Eigen::Matrix4d::Identity(); // world to robot transform
+    Eigen::Matrix4d T_WS = Eigen::Matrix4d::Identity(); // structure to world transform 
     Eigen::Matrix4d T_CS; 
 
-    util->LoadInitialPose ("/home/cameron/wkrpt300_images/testing/poses/-1.000000_-1.000000.json", T_CW);
-    util->LoadInitialPose ("/home/cameron/wkrpt300_images/testing/poses/struct.json", T_WS, true);
+    util->TransformPose ("/home/cameron/wkrpt300_images/testing/poses/camera_robot.json", T_CR);
+    util->LoadInitialPose ("/home/cameron/wkrpt300_images/testing/poses/-1.000000_-1.000000.json", T_RW);
+    util->LoadInitialPose ("/home/cameron/wkrpt300_images/testing/poses/struct_world.json", T_WS, true);
 
-    T_CS = T_CW * T_WS; 
+    T_CS = T_CR * T_RW * T_WS; 
 
     util->TransformCloudUpdate(input_cloud_CAD, T_CS);
 

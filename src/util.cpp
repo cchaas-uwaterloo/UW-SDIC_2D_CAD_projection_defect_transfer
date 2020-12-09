@@ -277,12 +277,60 @@ void Util::LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool st
     std::cout << T_ << sep;
 }
 
+void Util::TransformPose (std::string file_name_, Eigen::Matrix4d &T_, bool inverted_) {
+    // load file
+    nlohmann::json J;
+    std::ifstream file(file_name_);
+    file >> J;
+    
+    // initial pose
+    double w_pose [6]; // x, y, z, alpha, beta, gamma
+    double c_pose [6]; // x, y, z, alpha, beta, gamma 
+
+    w_pose[0] = J["pose"][0];
+    w_pose[1] = J["pose"][1];
+    w_pose[2] = J["pose"][2];
+    w_pose[3] = J["pose"][3];
+    w_pose[4] = J["pose"][4];
+    w_pose[5] = J["pose"][5];
+
+    // remap translations and rotations
+    RemapWorldtoCameraCoords(w_pose, c_pose);
+
+    // construct the matrix describing the transformation from the world to the camera frame
+    if (inverted_) {
+        Eigen::VectorXd perturbation(6, 1);
+        perturbation << -c_pose[3], 0, 0, 0, 0, 0; 
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, -c_pose[4], 0, 0, 0, 0;
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, 0, -c_pose[5], 0, 0, 0;
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, 0, 0, -c_pose[0], -c_pose[1], -c_pose[2];
+        T_ = PerturbTransformDegM(T_, perturbation); 
+    }
+    else { 
+        Eigen::VectorXd perturbation(6, 1);
+        perturbation << c_pose[3], 0, 0, 0, 0, 0; 
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, c_pose[4], 0, 0, 0, 0;
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, 0, c_pose[5], 0, 0, 0;
+        T_ = PerturbTransformDegM(T_, perturbation); 
+        perturbation << 0, 0, 0, c_pose[0], c_pose[1], c_pose[2];
+        T_ = PerturbTransformDegM(T_, perturbation); 
+    }
+
+
+}
+
 void Util::RemapWorldtoCameraCoords (const double (&world_transform)[6], double (&camera_transform)[6]) {
+    // simple rotation
     camera_transform[0] = -world_transform[1]; // y -> -x
     camera_transform[1] = -world_transform[2]; // z -> -y
     camera_transform[2] = world_transform[0]; // x -> z
     camera_transform[4] = world_transform[5]; // beta -> alpha
-    camera_transform[5] = -world_transform[6]; // gamma -> -beta ??
+    camera_transform[5] = -world_transform[6]; // gamma -> 
     camera_transform[6] = world_transform[4]; // alpha -> gamma
 }
 
