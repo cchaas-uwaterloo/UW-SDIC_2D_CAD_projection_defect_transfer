@@ -5,8 +5,8 @@ namespace cam_cad {
 Util::Util() {}
 
 void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_, 
-                              pcl::PointCloud<pcl::PointXYZ>::Ptr source_coud_,
-                              pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud_,
+                              pcl::PointCloud<pcl::PointXYZ>::ConstPtr source_coud_,
+                              pcl::PointCloud<pcl::PointXYZ>::ConstPtr target_cloud_,
                               uint16_t max_dist_) {
 
     pcl::registration::CorrespondenceEstimation<pcl::PointXYZ, pcl::PointXYZ> corr_est;
@@ -16,8 +16,8 @@ void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_,
 
 }
 
-void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
-                        pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
+void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_cloud_,
+                        pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_,
                         Eigen::Matrix4d &T_CW,
                         pcl::CorrespondencesPtr corrs_) {
 
@@ -34,7 +34,7 @@ void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     this->getCorrespondences(corrs_, proj_cloud, camera_cloud_, 1000);
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW) {
+pcl::PointCloud<pcl::PointXYZ>::Ptr Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, Eigen::Matrix4d &T_CW) {
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
     
@@ -75,7 +75,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::ProjectCloud (pcl::PointCloud<pcl::Poi
         
     }
 
-    printf("projection size: %zu \n", proj_cloud->size());
+    //printf("projection size: %zu \n", proj_cloud->size());
 
     return proj_cloud;
 
@@ -103,10 +103,9 @@ std::shared_ptr<beam_calibration::CameraModel> Util::GetCameraModel () {
 }
 
 void Util::ReadCameraModel (std::string intrinsics_file_path_) {
-    printf("reading camera intrinsics \n");
+    //printf("reading camera intrinsics \n");
     camera_model = beam_calibration::CameraModel::Create(intrinsics_file_path_); 
-    //camera_model = std::make_shared<beam_calibration::Radtan>(intrinsics_file_path_);
-    printf("read camera intrinsics \n");
+    //printf("read camera intrinsics \n");
     
 }
 
@@ -219,6 +218,22 @@ void Util::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_)
     }
 }
 
+pcl::PointCloud<pcl::PointXYZ>::Ptr Util::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, float scale_) {
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr scaled_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+
+    for (uint16_t i = 0; i < cloud_->size(); i++) {
+        pcl::PointXYZ to_add;
+        to_add.x = cloud_->at(i).x * scale_;
+        to_add.y = cloud_->at(i).y * scale_;
+        to_add.z = cloud_->at(i).z * scale_;
+        scaled_cloud->push_back(to_add);
+    }
+
+    return scaled_cloud;
+
+}
+
 void Util::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float x_scale_, float y_scale_) {
     for (uint16_t i = 0; i < cloud_->size(); i++) {
         cloud_->at(i).x *= x_scale_;
@@ -325,13 +340,32 @@ void Util::TransformPose (std::string file_name_, Eigen::Matrix4d &T_, bool inve
 }
 
 void Util::RemapWorldtoCameraCoords (const double (&world_transform)[6], double (&camera_transform)[6]) {
-    // simple rotation
+    // just a rotation
     camera_transform[0] = -world_transform[1]; // y -> -x
     camera_transform[1] = -world_transform[2]; // z -> -y
     camera_transform[2] = world_transform[0]; // x -> z
     camera_transform[4] = world_transform[5]; // beta -> alpha
     camera_transform[5] = -world_transform[6]; // gamma -> 
     camera_transform[6] = world_transform[4]; // alpha -> gamma
+}
+
+pcl::ModelCoefficients::Ptr GetCloudPlane(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_) {
+    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+    pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+    // Create the segmentation object
+    pcl::SACSegmentation<pcl::PointXYZ> seg;
+    // Optional
+    seg.setOptimizeCoefficients (true);
+    // Mandatory
+    seg.setModelType (pcl::SACMODEL_PLANE);
+    seg.setMethodType (pcl::SAC_RANSAC);
+    seg.setDistanceThreshold (0.01);
+
+    seg.setInputCloud (cloud_);
+    seg.segment (*inliers, *coefficients);
+
+    return coefficients;
+
 }
 
 // Private functions

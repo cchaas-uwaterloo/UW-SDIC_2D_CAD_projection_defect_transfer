@@ -11,6 +11,8 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/console/parse.h>
 #include <pcl/registration/correspondence_estimation.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/segmentation/sac_segmentation.h>
 #include <beam_calibration/CameraModel.h>
 #include <beam_calibration/Ladybug.h>
 #include <beam_calibration/Radtan.h>
@@ -33,17 +35,17 @@ public:
     ~Util() = default; 
 
     void getCorrespondences(pcl::CorrespondencesPtr corrs_, 
-                            pcl::PointCloud<pcl::PointXYZ>::Ptr source_coud_,
-                            pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud_,
+                            pcl::PointCloud<pcl::PointXYZ>::ConstPtr source_coud_,
+                            pcl::PointCloud<pcl::PointXYZ>::ConstPtr target_cloud_,
                             uint16_t max_dist_);
     
     //get correspondence estimates based on camera pos
-    void CorrEst (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
-                        pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
+    void CorrEst (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_cloud_,
+                        pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_,
                         Eigen::Matrix4d &T_CW,
                         pcl::CorrespondencesPtr corrs_);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr TransformCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr TransformCloud(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, Eigen::Matrix4d &T_CW);
 
     void TransformCloudUpdate(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW);
 
@@ -75,6 +77,8 @@ public:
 
     void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float scale_);
 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, float scale_);
+
     void ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float x_scale_, float y_scale_);
 
     // TODO remove this function, can just use the generalised transformed pose function 
@@ -88,6 +92,9 @@ public:
     // TODO remove this function, can just use the generalised transform pose function
     // can update the robot -> camera transformation file to include the necesary rotations or just create a new one
     void RemapWorldtoCameraCoords (const double (&world_transform)[6], double (&camera_transform)[6]);
+
+    //return value: [0] = a , [1] = b, [2] = c, [3] = d
+    pcl::ModelCoefficients::Ptr GetCloudPlane(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_);
 
 private: 
 

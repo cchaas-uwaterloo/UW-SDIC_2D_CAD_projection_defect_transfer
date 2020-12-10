@@ -26,8 +26,8 @@ public:
     Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_, std::string config_file_name_); 
     ~Solver() = default; 
 
-    bool SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
-                            pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_);
+    bool SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_cloud_, 
+                            pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_);
 
     Eigen::Matrix4d GetTransform();
 
@@ -48,13 +48,15 @@ public:
 
     double GetInitialPixelError ();
 
+    int GetSolutionIterations ();
+
 private:
     
     //initialize the problem with the residual blocks for each projected point 
     void BuildCeresProblem (std::shared_ptr<ceres::Problem>& problem, pcl::CorrespondencesPtr corrs_, 
                         const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
-                        pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
-                        pcl::PointCloud<pcl::PointXYZ>::Ptr cad_cloud_);
+                        pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_,
+                        pcl::PointCloud<pcl::PointXYZ>::ConstPtr cad_cloud_);
 
     //initialize the ceres solver options for the problem
     std::shared_ptr<ceres::Problem> SetupCeresOptions ();
@@ -95,6 +97,8 @@ private:
     double function_tolerance_, gradient_tolerance_, parameter_tolerance_, cloud_scale_, convergence_limit_;
 
     double initial_projection_error_;
+
+    uint8_t solution_iterations_;
 
     std::vector<double> results; //stores the incremental results of the ceres solution
 

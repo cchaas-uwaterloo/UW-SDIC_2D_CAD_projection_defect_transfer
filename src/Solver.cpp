@@ -10,33 +10,38 @@ Solver::Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_, st
 
     util->ReadCameraModel(cam_intrinsics_file_);
     camera_model = util->GetCameraModel();
+
+    solution_iterations_ = 0;
 }; 
 
-bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_, 
-                                pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_) {
+bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_cloud_, 
+                                pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_) {
 
     bool has_converged = false;
-    uint8_t iterations = 0;
+    
+    pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_scaled (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
     // correspondence object tells the cost function which points to compare
     pcl::CorrespondencesPtr proj_corrs (new pcl::Correspondences); 
 
-    util->ScaleCloud(CAD_cloud_,cloud_scale_);
+     CAD_cloud_scaled = util->ScaleCloud(CAD_cloud_, cloud_scale_);
 
     if (visualize_)
         vis->startVis();
 
     // transform, project, and get correspondences
-    util->CorrEst(CAD_cloud_, camera_cloud_, T_CS, proj_corrs);
+    util->CorrEst(CAD_cloud_scaled, camera_cloud_, T_CS, proj_corrs);
 
+    /*
     printf("initial pose: \n");
     std::string sep = "\n----------------------------------------\n";
     std::cout << T_CS << sep;
+    */
 
     // transformed cloud is only for the visualizer, the actual ceres solution takes just teh original CAD cloud and the iterative results 
-    trans_cloud = util->TransformCloud(CAD_cloud_, T_CS);
+    trans_cloud = util->TransformCloud(CAD_cloud_scaled, T_CS);
 
     // project cloud for visualizer
     proj_cloud = util->ProjectCloud(trans_cloud);
@@ -47,17 +52,21 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
     // set initial error before optimizing
     SetInitialPixelError(proj_cloud, camera_cloud_, proj_corrs);
 
+    /*
     printf("ready to start optimization \n");
+    */
 
     // loop problem until it has converged 
-    while (!has_converged && iterations < max_solution_iterations_) {
+    while (!has_converged && solution_iterations_ < max_solution_iterations_) {
 
-        iterations ++;
+        solution_iterations_ ++;
 
         // initialize problem 
         std::shared_ptr<ceres::Problem> problem = SetupCeresOptions();
 
-        printf("Solver iteration %u \n", iterations);
+        /*
+        printf("Solver iteration %u \n", solution_iterations_);
+        */
 
         if (visualize_)
         {
@@ -72,22 +81,26 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_,
             if (end == 'r') return false;
         }
 
-        BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, CAD_cloud_);
+        BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, CAD_cloud_scaled);
 
+        /*
         printf("Solving with %zu correspondences \n", proj_corrs->size());
+        */
 
-        SolveCeresProblem(problem, true);
+        SolveCeresProblem(problem, minimizer_progress_to_stdout_);
 
         T_CS = util->QuaternionAndTranslationToTransformMatrix(results);
 
+        /*
         std::string sep = "\n----------------------------------------\n";
         std::cout << T_CS << sep;
+        */
 
         // transform, project, and get correspondences
-        util->CorrEst(CAD_cloud_, camera_cloud_, T_CS, proj_corrs);
+        util->CorrEst(CAD_cloud_scaled, camera_cloud_, T_CS, proj_corrs);
 
         // update the position of the transformed cloud based on the upated transformation matrix for visualization
-        trans_cloud = util->TransformCloud(CAD_cloud_, T_CS);
+        trans_cloud = util->TransformCloud(CAD_cloud_scaled, T_CS);
 
         // project cloud for visualizer
         proj_cloud = util->ProjectCloud(trans_cloud);
@@ -112,7 +125,7 @@ Eigen::Matrix4d Solver::GetTransform() {
 
 std::shared_ptr<ceres::Problem> Solver::SetupCeresOptions () {
     // set ceres solver params
-    ceres_solver_options_.minimizer_progress_to_stdout = true;
+    ceres_solver_options_.minimizer_progress_to_stdout = minimizer_progress_to_stdout_;
     ceres_solver_options_.max_num_iterations = max_ceres_iterations_;
     ceres_solver_options_.max_solver_time_in_seconds = max_solver_time_in_seconds_;
     ceres_solver_options_.function_tolerance = function_tolerance_;
@@ -152,10 +165,12 @@ void Solver::LoadInitialPose (Eigen::Matrix4d &T_) {
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
     results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
+    /*
     printf("loaded initial pose\n");
     std::string sep = "\n----------------------------------------\n";
     std::cout << T_CS << sep;
-
+    */
+    
 }
 
 void Solver::LoadInitialPose (std::string file_name_) {
@@ -188,9 +203,11 @@ void Solver::LoadInitialPose (std::string file_name_) {
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
     results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
+    /*
     printf("loaded initial pose\n");
     std::string sep = "\n----------------------------------------\n";
     std::cout << T_CS << sep;
+    */
 
 }
 
@@ -207,9 +224,11 @@ void Solver::LoadInitialPose (std::string file_name_robot_, std::string file_nam
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
     results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
+    /*
     printf("loaded initial pose\n");
     std::string sep = "\n----------------------------------------\n";
     std::cout << T_CS << sep;
+    */
 }
 
 void Solver::TransformPose (std::string file_name_, bool inverted_) {
@@ -220,9 +239,11 @@ void Solver::TransformPose (std::string file_name_, bool inverted_) {
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
     results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
+    /*
     printf("updated initial pose\n");
     std::string sep = "\n----------------------------------------\n";
     std::cout << T_CS << sep;
+    */
 
 }
 
@@ -234,15 +255,19 @@ double Solver::GetInitialPixelError () {
     return initial_projection_error_;
 }
 
+int Solver::GetSolutionIterations () {
+    return solution_iterations_;
+}
+
 void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::CorrespondencesPtr corrs_,
                           const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
-                          pcl::PointCloud<pcl::PointXYZ>::Ptr camera_cloud_,
-                          pcl::PointCloud<pcl::PointXYZ>::Ptr cad_cloud_) {
+                          pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_,
+                          pcl::PointCloud<pcl::PointXYZ>::ConstPtr cad_cloud_) {
 
     problem->AddParameterBlock(&(results[0]), 7,
                                 se3_parameterization_.get());
 
-    printf("added parameter block \n");
+    //printf("added parameter block \n");
 
     for (int i = 0; i < corrs_->size(); i++) {
         //pixel 
@@ -295,7 +320,7 @@ bool Solver::CheckPixelConvergence(pcl::PointCloud<pcl::PointXYZ>::ConstPtr quer
   // average pixel error
   pixel_error /= corrs_->size();
 
-  printf ("the average pixel error is: %f\n", pixel_error);
+  //printf ("the average pixel error is: %f\n", pixel_error);
 
   if (pixel_error <= pixel_threshold_)
     return true;

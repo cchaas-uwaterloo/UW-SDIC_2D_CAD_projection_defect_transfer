@@ -143,6 +143,18 @@ target_link_libraries(simulation_test
   solver
 )
 
+# Add heuristic test executables
+add_executable(init_iterations_test tests/src/heuristics/ceres_iterations_test.cpp)
+add_dependencies(init_iterations_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(init_iterations_test
+  ${catkin_LIBRARIES} 
+  ${PCl_LIBRARIES}
+  image_reader 
+  visualizer 
+  utils
+  solver
+)
+
 # Mark executables and/or libraries for installation
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
