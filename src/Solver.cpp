@@ -64,9 +64,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
         // initialize problem 
         std::shared_ptr<ceres::Problem> problem = SetupCeresOptions();
 
-        /*
         printf("Solver iteration %u \n", solution_iterations_);
-        */
 
         if (visualize_)
         {

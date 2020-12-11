@@ -110,6 +110,16 @@ int main () {
                                         << CAD_plane->values[2] << " " 
                                         << CAD_plane->values[3] << std::endl;
 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr crack_points = createTestCrackPoints(input_cloud_camera);
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr back_projected_crack_points = mainUtility.BackProject(crack_points, input_cloud_CAD, CAD_plane);
+
+    printf("completed back projection \n");
+
+    vis1.startVis();
+
+    vis1.displayClouds(input_cloud_camera, back_projected_crack_points, "structure_cloud", "crack_cloud");
+
     char end = ' ';
 
     while (end != 'r') {
@@ -131,23 +141,26 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr createTestCrackPoints(pcl::PointCloud<pcl::P
     uint16_t num_points = input_cloud_camera_->size();
 
     // determine central x and y values
-    float avg_x = 0, avg_y = 0;
+    float max_x = 0, max_y = 0, min_x = 2048, min_y = 2048;
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
-        if (input_cloud_camera_->at(point_index).x > avg_x) avg_x = input_cloud_camera_->at(point_index).x; 
-        if (input_cloud_camera_->at(point_index).y > avg_y) avg_y = input_cloud_camera_->at(point_index).y; 
+        if (input_cloud_camera_->at(point_index).x > max_x) max_x = input_cloud_camera_->at(point_index).x; 
+        if (input_cloud_camera_->at(point_index).y > max_y) max_y = input_cloud_camera_->at(point_index).y; 
+
+        if (input_cloud_camera_->at(point_index).x < min_x) min_x = input_cloud_camera_->at(point_index).x; 
+        if (input_cloud_camera_->at(point_index).y < min_y) min_y = input_cloud_camera_->at(point_index).y;
     }
 
-    avg_x /= 2;
-    avg_y /= 2;
+    float center_x = min_x + (max_x-min_x)/2;
+    float center_y = min_y + (max_y-min_y)/2;
 
     // build cross at center of structure cloud
-
-    for (uint16_t u = avg_x-20; u < avg_x+20; u ++) {
-        pcl::PointXYZ to_add (u,avg_y,0);
+    
+    for (uint16_t u = center_x-150; u < center_x+150; u ++) {
+        pcl::PointXYZ to_add (u,center_y,0);
         crack_cloud->push_back(to_add);
     }
-    for (uint16_t v = avg_y-20; v < avg_y+20; v ++) {
-        pcl::PointXYZ to_add (avg_x,v,0);
+    for (uint16_t v = center_y-150; v < center_y+150; v ++) {
+        pcl::PointXYZ to_add (center_x,v,0);
         crack_cloud->push_back(to_add);
     }
 

@@ -33,7 +33,7 @@ ofstream fout;
 
 int main () {
 
-    fout.open("/home/cameron/wkrpt300_images/testing/test_1_1.txt");
+    fout.open("/home/cameron/wkrpt300_images/testing/test_1_2.txt");
 
     fout << "Started... \n";
 
@@ -45,7 +45,7 @@ int main () {
     pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD (new pcl::PointCloud<pcl::PointXYZ>);
 
-    std::string camera_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/-1.000000_-1.000000.json";
+    std::string camera_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/-3.000000_0.000000.json";
     std::string CAD_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/sim_CAD.json";
     std::cout << camera_file_location << std::endl;
     std::cout << CAD_file_location << std::endl;
@@ -85,7 +85,15 @@ int main () {
                             -0.0238071,    0.0989949,     0.994803,      9.63384,
                             0,            0,            0,            1;
 
-    testOne(perfect_init_one, input_cloud_camera, input_cloud_CAD);
+    // Perfect init # 2 (-3,0)
+    Eigen::Matrix4d perfect_init_two;
+    perfect_init_two <<       0.999889,  0.00625994,   0.0135535,    0.200217,
+                            -0.00447353,     0.99176,   -0.128035,    -1.33746,
+                            -0.0142433,     0.12796,    0.991677,     12.2632,
+                                    0,           0,           0,           1;
+
+
+    testOne(perfect_init_two, input_cloud_camera, input_cloud_CAD);
 
     fout.close();
 
@@ -110,7 +118,7 @@ void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr
     if (convergence) {
         Eigen::Matrix4d T_CS_final = solver.GetTransform();
 
-        if (mainUtility.RoundMatrix(perfect_init_, 3) == mainUtility.RoundMatrix(T_CS_final, 3))
+        if (mainUtility.RoundMatrix(perfect_init_, 1) == mainUtility.RoundMatrix(T_CS_final, 1))
             good_init = true;
 
     } 
@@ -137,7 +145,7 @@ void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr
 
     fout << "\n\nTEST ONE RESULTS: \n";
 
-    fout << "\ninital pose: (-1,-1)\n";
+    fout << "\ninital pose: (-3, 0)\n";
 
     uint16_t max_ceres_iterations[10] = {5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
 

@@ -88,6 +88,17 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 # add test executables
+add_executable(back_project_test tests/src/back_project_test.cpp)
+add_dependencies(back_project_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+target_link_libraries(back_project_test
+  ${catkin_LIBRARIES} 
+  ${PCl_LIBRARIES}
+  image_reader 
+  visualizer 
+  utils
+  solver
+)
+
 add_executable(scale_test tests/src/cad_image_scale_test.cpp)
 add_dependencies(scale_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(scale_test

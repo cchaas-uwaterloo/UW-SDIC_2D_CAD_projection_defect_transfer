@@ -35,7 +35,7 @@ int main () {
 
     bool read_success_camera = false, read_success_CAD = false; 
 
-    std::string camera_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/-1.000000_-1.000000.json";
+    std::string camera_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/-3.000000_0.000000.json";
     std::string CAD_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/sim_CAD.json";
     std::cout << camera_file_location << std::endl;
     std::cout << CAD_file_location << std::endl;
@@ -74,7 +74,7 @@ int main () {
 
     cam_cad::Solver solver(solverVisualizer, solverUtility, config_file_location);
 
-    solver.LoadInitialPose("/home/cameron/wkrpt300_images/testing/poses/-1.000000_-1.000000.json", 
+    solver.LoadInitialPose("/home/cameron/wkrpt300_images/testing/poses/-3.000000_0.000000.json", 
                            "/home/cameron/wkrpt300_images/testing/poses/struct_world.json");
 
     // robot -> camera 
@@ -83,14 +83,14 @@ int main () {
     bool convergence = solver.SolveOptimization(input_cloud_CAD, input_cloud_camera);
 
     if (convergence) {
-        printf("\n\n\n\nIt's converged you fucking beutician.\n");
+        printf("\n\n\n\nIt's converged.\n");
         Eigen::Matrix4d T_CS_final = solver.GetTransform();
         printf("The converged structure -> camera transform is: \n");
         std::string sep = "\n----------------------------------------\n";
         std::cout << T_CS_final << sep;
 
     } 
-    else printf ("It failed. Just like you. Figure it the fuck out.\n");
+    else printf ("It failed. Just like you. Figure it out.\n");
 
 
     //*******************************//

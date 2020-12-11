@@ -141,19 +141,22 @@ void Util::originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     uint16_t num_points = cloud_->size();
 
     // determine central x and y values
-    float avg_x = 0, avg_y = 0;
+    float max_x = 0, max_y = 0, min_x = 2048, min_y = 2048;
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
-        if (cloud_->at(point_index).x > avg_x) avg_x = cloud_->at(point_index).x; 
-        if (cloud_->at(point_index).y > avg_y) avg_y = cloud_->at(point_index).y; 
+        if (cloud_->at(point_index).x > max_x) max_x = cloud_->at(point_index).x; 
+        if (cloud_->at(point_index).y > max_y) max_y = cloud_->at(point_index).y; 
+
+        if (cloud_->at(point_index).x < min_x) min_x = cloud_->at(point_index).x; 
+        if (cloud_->at(point_index).y < min_y) min_y = cloud_->at(point_index).y;
     }
 
-    avg_x /= 2;
-    avg_y /= 2;
+    float center_x = min_x + (max_x-min_x)/2;
+    float center_y = min_y + (max_y-min_y)/2;
 
     // shift all points back to center on origin
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
-        cloud_->at(point_index).x -= (int)avg_x;
-        cloud_->at(point_index).y -= (int)avg_y;
+        cloud_->at(point_index).x -= (int)center_x;
+        cloud_->at(point_index).y -= (int)center_y;
     }
 
 }
@@ -349,7 +352,7 @@ void Util::RemapWorldtoCameraCoords (const double (&world_transform)[6], double 
     camera_transform[6] = world_transform[4]; // alpha -> gamma
 }
 
-pcl::ModelCoefficients::Ptr GetCloudPlane(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_) {
+pcl::ModelCoefficients::Ptr Util::GetCloudPlane(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_) {
     pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
     // Create the segmentation object
@@ -365,6 +368,37 @@ pcl::ModelCoefficients::Ptr GetCloudPlane(pcl::PointCloud<pcl::PointXYZ>::ConstP
     seg.segment (*inliers, *coefficients);
 
     return coefficients;
+
+}
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr Util::BackProject(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cloud_, 
+                                                    pcl::PointCloud<pcl::PointXYZ>::ConstPtr cad_cloud_, 
+                                                    pcl::ModelCoefficients::ConstPtr target_plane_) {
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr back_projected_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+
+    // get cad surface normal and point on the cad plane
+    Eigen::Vector3d cad_normal (target_plane_->values[0], target_plane_->values[1], target_plane_->values[2]);
+    Eigen::Vector3d cad_point (cad_cloud_->at(0).x, cad_cloud_->at(0).y, cad_cloud_->at(0).z);
+
+    for (uint32_t i = 0; i < image_cloud_->size(); i++) {
+        Eigen::Vector3d image_point (image_cloud_->at(i).x, image_cloud_->at(i).y, image_cloud_->at(i).z);
+        Eigen::Vector2i image_pixel (image_cloud_->at(i).x, image_cloud_->at(i).y);
+        Eigen::Vector3d ray_unit_vector = camera_model->BackProject(image_pixel).value().normalized();
+        double prod1 = (image_point - cad_point).dot(cad_normal);
+
+        double len = prod1 / (ray_unit_vector.dot(cad_normal));
+
+        Eigen::Vector3d back_projected_point = image_point + ray_unit_vector * len;
+
+        pcl::PointXYZ back_projected_cloud_point (back_projected_point[0], back_projected_point[1], back_projected_point[2]);
+
+        back_projected_cloud->push_back(back_projected_cloud_point);
+
+    }
+
+    return back_projected_cloud;
+
 
 }
 

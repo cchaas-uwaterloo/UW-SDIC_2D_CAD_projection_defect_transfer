@@ -96,6 +96,10 @@ public:
     //return value: [0] = a , [1] = b, [2] = c, [3] = d
     pcl::ModelCoefficients::Ptr GetCloudPlane(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_);
 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr BackProject(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cloud_, 
+                                                    pcl::PointCloud<pcl::PointXYZ>::ConstPtr cad_cloud_, 
+                                                    pcl::ModelCoefficients::ConstPtr target_plane_);
+
 private: 
 
     Eigen::Matrix3d LieAlgebraToR(const Eigen::Vector3d& eps);
