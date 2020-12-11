@@ -101,6 +101,10 @@ int main () {
     //Back Projection****************//
     cam_cad::Visualizer vis1("back projection visualizer");
 
+    mainUtility.ReadCameraModel("/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/Radtan_test.json");
+
+    mainUtility.ScaleCloud(input_cloud_CAD, 0.01);
+
     pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_CAD_cloud = mainUtility.TransformCloud(input_cloud_CAD, T_CS_final);
 
     pcl::ModelCoefficients::Ptr CAD_plane = mainUtility.GetCloudPlane(transformed_CAD_cloud);
@@ -112,13 +116,15 @@ int main () {
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr crack_points = createTestCrackPoints(input_cloud_camera);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr back_projected_crack_points = mainUtility.BackProject(crack_points, input_cloud_CAD, CAD_plane);
+    printf("created test crack points \n");
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr back_projected_crack_points = mainUtility.BackProject(crack_points, transformed_CAD_cloud, CAD_plane);
 
     printf("completed back projection \n");
 
-    vis1.startVis();
+    vis1.startVis(1);
 
-    vis1.displayClouds(input_cloud_camera, back_projected_crack_points, "structure_cloud", "crack_cloud");
+    vis1.displayClouds(transformed_CAD_cloud, back_projected_crack_points, "structure_cloud", "crack_cloud");
 
     char end = ' ';
 

@@ -10,11 +10,12 @@
   "initial_z": 80, 
   "cloud_scale": 0.01,
   "minimizer_progress_to_stdout": false,
+  "transform_progress_to_stdout": true,
   "max_solver_time_in_seconds": 1e6, 
   "function_tolerance": 1e-8,
   "gradient_tolerance": 1e-10, 
   "parameter_tolerance": 1e-8,
   "camera_intrinsics": "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/Radtan_test.json", 
-  "visualize": true, 
+  "visualize": false, 
   "convergence_type": "pixel"
 }

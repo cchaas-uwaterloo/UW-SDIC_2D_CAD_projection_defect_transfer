@@ -26,7 +26,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
     // correspondence object tells the cost function which points to compare
     pcl::CorrespondencesPtr proj_corrs (new pcl::Correspondences); 
 
-     CAD_cloud_scaled = util->ScaleCloud(CAD_cloud_, cloud_scale_);
+    CAD_cloud_scaled = util->ScaleCloud(CAD_cloud_, cloud_scale_);
 
     if (visualize_)
         vis->startVis();
@@ -81,18 +81,14 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
 
         BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, CAD_cloud_scaled);
 
-        /*
-        printf("Solving with %zu correspondences \n", proj_corrs->size());
-        */
-
         SolveCeresProblem(problem, minimizer_progress_to_stdout_);
 
         T_CS = util->QuaternionAndTranslationToTransformMatrix(results);
 
-        /*
-        std::string sep = "\n----------------------------------------\n";
-        std::cout << T_CS << sep;
-        */
+        if (transform_progress_to_stdout_) {
+            std::string sep = "\n----------------------------------------\n";
+            std::cout << T_CS << sep;
+        }
 
         // transform, project, and get correspondences
         util->CorrEst(CAD_cloud_scaled, camera_cloud_, T_CS, proj_corrs);
@@ -163,11 +159,11 @@ void Solver::LoadInitialPose (Eigen::Matrix4d &T_) {
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
     results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
-    /*
-    printf("loaded initial pose\n");
-    std::string sep = "\n----------------------------------------\n";
-    std::cout << T_CS << sep;
-    */
+    if (transform_progress_to_stdout_) {
+        printf("loaded initial pose\n");
+        std::string sep = "\n----------------------------------------\n";
+        std::cout << T_CS << sep;
+    }
     
 }
 
@@ -201,11 +197,11 @@ void Solver::LoadInitialPose (std::string file_name_) {
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
     results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
-    /*
-    printf("loaded initial pose\n");
-    std::string sep = "\n----------------------------------------\n";
-    std::cout << T_CS << sep;
-    */
+    if (transform_progress_to_stdout_) {
+        printf("loaded initial pose\n");
+        std::string sep = "\n----------------------------------------\n";
+        std::cout << T_CS << sep;
+    }  
 
 }
 
@@ -222,11 +218,12 @@ void Solver::LoadInitialPose (std::string file_name_robot_, std::string file_nam
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
     results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
-    /*
-    printf("loaded initial pose\n");
-    std::string sep = "\n----------------------------------------\n";
-    std::cout << T_CS << sep;
-    */
+    if (transform_progress_to_stdout_) {
+        printf("loaded initial pose\n");
+        std::string sep = "\n----------------------------------------\n";
+        std::cout << T_CS << sep;
+    }
+    
 }
 
 void Solver::TransformPose (std::string file_name_, bool inverted_) {
@@ -237,11 +234,11 @@ void Solver::TransformPose (std::string file_name_, bool inverted_) {
     Eigen::Quaternion<double> q1 = Eigen::Quaternion<double>(R1);
     results = {q1.w(), q1.x(), q1.y(), q1.z(), T_CS(0, 3), T_CS(1, 3), T_CS(2, 3)};
 
-    /*
-    printf("updated initial pose\n");
-    std::string sep = "\n----------------------------------------\n";
-    std::cout << T_CS << sep;
-    */
+    if (transform_progress_to_stdout_) {
+        printf("updated initial pose\n");
+        std::string sep = "\n----------------------------------------\n";
+        std::cout << T_CS << sep;
+    }    
 
 }
 
@@ -264,8 +261,6 @@ void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::Co
 
     problem->AddParameterBlock(&(results[0]), 7,
                                 se3_parameterization_.get());
-
-    //printf("added parameter block \n");
 
     for (int i = 0; i < corrs_->size(); i++) {
         //pixel 
@@ -347,6 +342,7 @@ void Solver::ReadSolutionParams(std::string file_name_) {
   initial_z = J["initial_z"];
   cloud_scale_ = J["cloud_scale"];
   minimizer_progress_to_stdout_ = J["minimizer_progress_to_stdout"];
+  transform_progress_to_stdout_ = J["transform_progress_to_stdout"];
   max_solver_time_in_seconds_ = J["max_solver_time_in_seconds"];
   function_tolerance_ = J["function_tolerance"];
   gradient_tolerance_ = J["gradient_tolerance"];

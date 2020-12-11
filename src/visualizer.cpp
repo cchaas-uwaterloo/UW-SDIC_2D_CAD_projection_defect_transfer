@@ -12,6 +12,8 @@ Visualizer::~Visualizer() {
   display2_called = false;
   display3_called = false; 
   display4_called = false;
+  display5_called = false;
+  display6_called = false;
 
 }
 
@@ -43,9 +45,7 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, std::
   if(!display1_called) {
     point_cloud_display->addPointCloud(cloud_, id_,0);
     point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_);
-    point_cloud_display->resetCamera();
-    printf("Point cloud added \n");
-    
+    point_cloud_display->resetCamera();    
   }
   //otherwise, update the existing cloud
   else 
@@ -84,6 +84,84 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
   mtx.unlock();
 
   display2_called = true;
+
+}
+
+// display three clouds with no correspondences
+void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1_, 
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2_,
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud3_,
+                       std::string id1_,
+                       std::string id2_,
+                       std::string id3_) {
+
+  //get mutex for visulalizer spinning in vis thread and either create a new cloud or update the existing one
+  mtx.lock();
+
+  //if the visualizer does not already contain the image cloud, add it
+  if(!display3_called) {
+    point_cloud_display->addPointCloud(cloud1_, id1_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id1_);
+    point_cloud_display->resetCamera();
+    point_cloud_display->addPointCloud(cloud2_, id2_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id2_);
+    point_cloud_display->resetCamera();
+    point_cloud_display->addPointCloud(cloud3_, id3_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id3_);
+    point_cloud_display->resetCamera();
+  }
+  //otherwise, update the existing cloud
+  else {
+    point_cloud_display->updatePointCloud(cloud1_, id1_);
+    point_cloud_display->updatePointCloud(cloud2_, id2_);
+    point_cloud_display->updatePointCloud(cloud3_, id3_);
+  }
+
+  mtx.unlock();
+
+  display3_called = true;
+
+}
+
+// display three clouds with no correspondences
+void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1_, 
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2_,
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud3_,
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud4_,
+                       std::string id1_,
+                       std::string id2_,
+                       std::string id3_,
+                       std::string id4_) {
+
+  //get mutex for visulalizer spinning in vis thread and either create a new cloud or update the existing one
+  mtx.lock();
+
+  //if the visualizer does not already contain the image cloud, add it
+  if(!display3_called) {
+    point_cloud_display->addPointCloud(cloud1_, id1_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id1_);
+    point_cloud_display->resetCamera();
+    point_cloud_display->addPointCloud(cloud2_, id2_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id2_);
+    point_cloud_display->resetCamera();
+    point_cloud_display->addPointCloud(cloud3_, id3_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id3_);
+    point_cloud_display->resetCamera();
+    point_cloud_display->addPointCloud(cloud4_, id4_);
+    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id4_);
+    point_cloud_display->resetCamera();
+  }
+  //otherwise, update the existing cloud
+  else {
+    point_cloud_display->updatePointCloud(cloud1_, id1_);
+    point_cloud_display->updatePointCloud(cloud2_, id2_);
+    point_cloud_display->updatePointCloud(cloud3_, id3_);
+    point_cloud_display->updatePointCloud(cloud3_, id4_);
+  }
+
+  mtx.unlock();
+
+  display4_called = true;
 
 }
 
@@ -130,7 +208,7 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
 
   mtx.unlock();
 
-  display3_called = true;
+  display5_called = true;
 
 }
 
@@ -184,18 +262,15 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
 
   }
 
-  printf("correspondences added to visualizer \n");
-
   mtx.unlock();
 
-  display4_called = true;
+  display6_called = true;
 
 }
 
 //private threaded functions
 
 void Visualizer::spin() {
-  printf("in vis thread \n");
   while (this->continueFlag.test_and_set(std::memory_order_relaxed) &&
            !(this->point_cloud_display->wasStopped()))
   {

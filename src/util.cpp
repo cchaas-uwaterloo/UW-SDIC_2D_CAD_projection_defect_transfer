@@ -381,15 +381,22 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::BackProject(pcl::PointCloud<pcl::Point
     Eigen::Vector3d cad_normal (target_plane_->values[0], target_plane_->values[1], target_plane_->values[2]);
     Eigen::Vector3d cad_point (cad_cloud_->at(0).x, cad_cloud_->at(0).y, cad_cloud_->at(0).z);
 
+
+    printf ("BACK PROJECT: got plane normal and point \n");
+
     for (uint32_t i = 0; i < image_cloud_->size(); i++) {
-        Eigen::Vector3d image_point (image_cloud_->at(i).x, image_cloud_->at(i).y, image_cloud_->at(i).z);
+        //Eigen::Vector3d image_point (image_cloud_->at(i).x, image_cloud_->at(i).y, image_cloud_->at(i).z);
+        Eigen::Vector3d image_point (0,0,0);
         Eigen::Vector2i image_pixel (image_cloud_->at(i).x, image_cloud_->at(i).y);
         Eigen::Vector3d ray_unit_vector = camera_model->BackProject(image_pixel).value().normalized();
+        std::cout << "ray unit vector: " << ray_unit_vector << std::endl;
         double prod1 = (image_point - cad_point).dot(cad_normal);
 
         double len = prod1 / (ray_unit_vector.dot(cad_normal));
 
-        Eigen::Vector3d back_projected_point = image_point + ray_unit_vector * len;
+        printf("length: %f\n", len);
+
+        Eigen::Vector3d back_projected_point = image_point - ray_unit_vector * len;
 
         pcl::PointXYZ back_projected_cloud_point (back_projected_point[0], back_projected_point[1], back_projected_point[2]);
 
@@ -398,7 +405,6 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::BackProject(pcl::PointCloud<pcl::Point
     }
 
     return back_projected_cloud;
-
 
 }
 

@@ -92,7 +92,7 @@ private:
     uint32_t max_solution_iterations_, max_ceres_iterations_; 
     std::string cam_intrinsics_file_, convergence_type_;
 
-    bool minimizer_progress_to_stdout_, visualize_; 
+    bool minimizer_progress_to_stdout_, transform_progress_to_stdout_, visualize_; 
     uint32_t max_solver_time_in_seconds_;
     double function_tolerance_, gradient_tolerance_, parameter_tolerance_, cloud_scale_, convergence_limit_;
 

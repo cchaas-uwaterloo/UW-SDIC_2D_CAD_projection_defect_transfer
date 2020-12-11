@@ -39,6 +39,24 @@ public:
                             std::string id_image_,
                             std::string id_projected_);
 
+    // display three clouds with no correspondences
+    void displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1_, 
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2_,
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud3_,
+                       std::string id1_,
+                       std::string id2_,
+                       std::string id3_);
+
+    // display four clouds with no correspondences
+    void displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1_, 
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2_,
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud3_,
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud4_,
+                       std::string id1_,
+                       std::string id2_,
+                       std::string id3_,
+                       std::string id4_);
+
     // display camera and projected points in 2D with correspondences
     //NOTE_ take correspondences from projected points to image points
     void displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
@@ -68,7 +86,7 @@ private:
     std::string display_name;
 
     std::atomic_flag continueFlag = ATOMIC_FLAG_INIT;
-    bool display1_called, display2_called, display3_called, display4_called;
+    bool display1_called, display2_called, display3_called, display4_called, display5_called, display6_called;
 
     //vis thread method in which the visualizer spins
     void spin();
