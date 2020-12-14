@@ -1,7 +1,5 @@
-// Class to display clouds and 2D point maps 
-
-#ifndef CAMCAD_VISUALIZER_HPP
-#define CAMCAD_VISUALIZER_HPP
+#ifndef CAMCAD_VISUALIZER_H
+#define CAMCAD_VISUALIZER_H
 
 #include <cstdint>
 #include <pcl/point_cloud.h>

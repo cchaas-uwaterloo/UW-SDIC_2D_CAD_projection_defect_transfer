@@ -1,4 +1,4 @@
-#include "Solver.hpp"
+#include "Solver.h"
 
 namespace cam_cad {
 
@@ -34,13 +34,7 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
     // transform, project, and get correspondences
     util->CorrEst(CAD_cloud_scaled, camera_cloud_, T_CS, proj_corrs);
 
-    /*
-    printf("initial pose: \n");
-    std::string sep = "\n----------------------------------------\n";
-    std::cout << T_CS << sep;
-    */
-
-    // transformed cloud is only for the visualizer, the actual ceres solution takes just teh original CAD cloud and the iterative results 
+    // transformed cloud is only for the visualizer, the actual ceres solution takes just the original CAD cloud and the iterative results 
     trans_cloud = util->TransformCloud(CAD_cloud_scaled, T_CS);
 
     // project cloud for visualizer

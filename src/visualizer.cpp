@@ -1,4 +1,4 @@
-#include "visualizer.hpp"
+#include "visualizer.h"
 #include <stdio.h>
 
 namespace cam_cad {

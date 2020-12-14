@@ -16,6 +16,6 @@
   "gradient_tolerance": 1e-10, 
   "parameter_tolerance": 1e-8,
   "camera_intrinsics": "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/Radtan_test.json", 
-  "visualize": false, 
+  "visualize": true, 
   "convergence_type": "pixel"
 }

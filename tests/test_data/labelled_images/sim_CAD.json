@@ -1,0 +1,59 @@
+{
+  "flags": {},
+  "shapes": [
+    {
+      "label": "CAD outline",
+      "line_color": null,
+      "fill_color": null,
+      "points": [
+        [
+          101,
+          339
+        ],
+        [
+          100,
+          101
+        ],
+        [
+          1,
+          100
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          399,
+          2
+        ],
+        [
+          400,
+          99
+        ],
+        [
+          300,
+          100
+        ],
+        [
+          300,
+          338
+        ]
+      ]
+    }
+  ],
+  "labels": [],
+  "lineColor": [
+    0,
+    255,
+    0,
+    128
+  ],
+  "fillColor": [
+    255,
+    0,
+    0,
+    128
+  ],
+  "imagePath": "sim_CAD.jpg",
+  "imageData": null
+}

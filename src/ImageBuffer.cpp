@@ -1,4 +1,4 @@
-#include "ImageBuffer.hpp"
+#include "ImageBuffer.h"
 
 using json = nlohmann::json;
 

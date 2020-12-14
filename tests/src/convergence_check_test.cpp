@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <cstdint>
 #include <iostream>
-#include "ImageBuffer.hpp"
-#include "visualizer.hpp"
-#include "Solver.hpp"
-#include "util.hpp"
+#include "ImageBuffer.h"
+#include "visualizer.h"
+#include "Solver.h"
+#include "util.h"
 #include <X11/Xlib.h> 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
