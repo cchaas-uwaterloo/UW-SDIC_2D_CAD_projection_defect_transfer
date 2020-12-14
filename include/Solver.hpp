@@ -9,7 +9,6 @@
 #include <beam_calibration/CameraModel.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
-#include "imageReader.hpp"
 #include "util.hpp"
 #include "visualizer.hpp"
 #include <stdio.h>

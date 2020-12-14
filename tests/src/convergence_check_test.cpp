@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <cstdint>
 #include <iostream>
-#include "imageReader.hpp"
+#include "ImageBuffer.hpp"
 #include "visualizer.hpp"
 #include "Solver.hpp"
 #include "util.hpp"
@@ -22,7 +22,7 @@ int main () {
 
     printf("Started... \n");
     
-    cam_cad::ImageReader imageReader;
+    cam_cad::ImageBuffer ImageBuffer;
     cam_cad::Util mainUtility;
     std::shared_ptr<cam_cad::Util> solverUtility (new cam_cad::Util);
     cam_cad::Visualizer vis1("visualizer");
@@ -40,11 +40,11 @@ int main () {
     std::cout << camera_file_location << std::endl;
     std::cout << CAD_file_location << std::endl;
 
-    read_success_camera = imageReader.readPoints(camera_file_location, &input_points_camera); 
+    read_success_camera = ImageBuffer.readPoints(camera_file_location, &input_points_camera); 
 
     if (read_success_camera) printf("camera data read success\n");
 
-    read_success_CAD = imageReader.readPoints(CAD_file_location, &input_points_CAD);
+    read_success_CAD = ImageBuffer.readPoints(CAD_file_location, &input_points_CAD);
 
     if (read_success_CAD) printf("CAD data read success\n");
 
@@ -52,15 +52,15 @@ int main () {
 
     //input cloud operations*********//
 
-    imageReader.densifyPoints(&input_points_camera, 10);
-    imageReader.densifyPoints(&input_points_CAD, 10);
+    ImageBuffer.densifyPoints(&input_points_camera, 10);
+    ImageBuffer.densifyPoints(&input_points_CAD, 10);
 
-    //imageReader.scalePoints(&input_points_CAD, 0.01);
+    //ImageBuffer.scalePoints(&input_points_CAD, 0.01);
 
     printf("points scaled \n");
 
-    imageReader.populateCloud(&input_points_camera, input_cloud_camera, 0);
-    imageReader.populateCloud(&input_points_CAD, input_cloud_CAD, 0);
+    ImageBuffer.populateCloud(&input_points_camera, input_cloud_camera, 0);
+    ImageBuffer.populateCloud(&input_points_CAD, input_cloud_CAD, 0);
 
     printf("clouds populated \n");
 

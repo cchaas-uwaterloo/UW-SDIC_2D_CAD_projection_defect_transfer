@@ -71,6 +71,11 @@ public:
     Eigen::MatrixXd RoundMatrix(const Eigen::MatrixXd& M, const int& precision);
 
     void originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
+
+    // used to restore cloud after calling originCloudxy 
+    // need to call after originCloudxy with the same utility
+    void OffsetCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
+
     void rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_);
 
     void GetCloudScale(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, const double max_x_dim_, const double max_y_dim_, float& x_scale_, float& y_scale_);
@@ -109,6 +114,9 @@ private:
     double DegToRad(double d);
 
     std::shared_ptr<beam_calibration::CameraModel> camera_model;
+
+    double image_offset_x_, image_offset_y_; 
+    bool center_image_called_;
 
 };
 

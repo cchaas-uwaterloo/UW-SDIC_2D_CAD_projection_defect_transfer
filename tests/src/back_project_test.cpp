@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <cstdint>
 #include <iostream>
-#include "imageReader.hpp"
+#include "ImageBuffer.hpp"
 #include "visualizer.hpp"
 #include "Solver.hpp"
 #include "util.hpp"
@@ -24,7 +24,7 @@ int main () {
 
     printf("Started... \n");
     
-    cam_cad::ImageReader imageReader;
+    cam_cad::ImageBuffer ImageBuffer;
     cam_cad::Util mainUtility;
     std::shared_ptr<cam_cad::Util> solverUtility (new cam_cad::Util);
     std::shared_ptr<cam_cad::Visualizer> solverVisualizer (new cam_cad::Visualizer ("solution visualizer"));
@@ -41,11 +41,11 @@ int main () {
     std::cout << camera_file_location << std::endl;
     std::cout << CAD_file_location << std::endl;
 
-    read_success_camera = imageReader.readPoints(camera_file_location, &input_points_camera); 
+    read_success_camera = ImageBuffer.readPoints(camera_file_location, &input_points_camera); 
 
     if (read_success_camera) printf("camera data read success\n");
 
-    read_success_CAD = imageReader.readPoints(CAD_file_location, &input_points_CAD);
+    read_success_CAD = ImageBuffer.readPoints(CAD_file_location, &input_points_CAD);
 
     if (read_success_CAD) printf("CAD data read success\n");
 
@@ -53,15 +53,15 @@ int main () {
 
     //input cloud operations*********//
 
-    imageReader.densifyPoints(&input_points_camera, 10);
-    imageReader.densifyPoints(&input_points_CAD, 10);
+    ImageBuffer.densifyPoints(&input_points_camera, 10);
+    ImageBuffer.densifyPoints(&input_points_CAD, 10);
 
-    //imageReader.scalePoints(&input_points_CAD, 0.01);
+    //ImageBuffer.scalePoints(&input_points_CAD, 0.01);
 
     printf("points scaled \n");
 
-    imageReader.populateCloud(&input_points_camera, input_cloud_camera, 0);
-    imageReader.populateCloud(&input_points_CAD, input_cloud_CAD, 0);
+    ImageBuffer.populateCloud(&input_points_camera, input_cloud_camera, 0);
+    ImageBuffer.populateCloud(&input_points_CAD, input_cloud_CAD, 0);
 
     printf("clouds populated \n");
 
@@ -133,6 +133,32 @@ int main () {
     }
 
     vis1.endVis();
+
+    //Re-center CAD cloud with crack points*************//
+    cam_cad::Visualizer vis2("back projection visualizer");
+
+    Eigen::Matrix4d T_SC = T_CS_final.inverse();
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_crack_points = mainUtility.TransformCloud(back_projected_crack_points, T_SC);
+
+    mainUtility.TransformCloudUpdate(transformed_CAD_cloud, T_SC);
+
+    mainUtility.ScaleCloud(transformed_CAD_cloud, 100);
+    mainUtility.ScaleCloud(CAD_crack_points, 100);
+
+    mainUtility.OffsetCloudxy(transformed_CAD_cloud);
+    mainUtility.OffsetCloudxy(CAD_crack_points);
+
+    vis2.startVis(10);
+
+    vis2.displayClouds(CAD_crack_points, transformed_CAD_cloud, "crack points", "CAD_cloud");
+
+    char end1 = ' ';
+
+    while (end1 != 'r') {
+        cin >> end1; 
+    }
+
 
     printf("exiting program \n");
 

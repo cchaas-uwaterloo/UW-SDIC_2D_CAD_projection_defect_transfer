@@ -17,7 +17,6 @@
 #include <fstream>
 #include <string>
 #include <math.h>
-#include "imageReader.hpp"
 #include <thread>
 #include <mutex>
 #include <chrono>

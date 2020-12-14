@@ -2,7 +2,9 @@
 
 namespace cam_cad {
 
-Util::Util() {}
+Util::Util() {
+    center_image_called_ = false;
+}
 
 void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_, 
                               pcl::PointCloud<pcl::PointXYZ>::ConstPtr source_coud_,
@@ -103,10 +105,7 @@ std::shared_ptr<beam_calibration::CameraModel> Util::GetCameraModel () {
 }
 
 void Util::ReadCameraModel (std::string intrinsics_file_path_) {
-    //printf("reading camera intrinsics \n");
     camera_model = beam_calibration::CameraModel::Create(intrinsics_file_path_); 
-    //printf("read camera intrinsics \n");
-    
 }
 
 void Util::SetCameraID (uint8_t cam_ID_){
@@ -153,10 +152,29 @@ void Util::originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     float center_x = min_x + (max_x-min_x)/2;
     float center_y = min_y + (max_y-min_y)/2;
 
+    image_offset_x_ = center_x;
+    image_offset_y_ = center_y;
+
     // shift all points back to center on origin
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
         cloud_->at(point_index).x -= (int)center_x;
         cloud_->at(point_index).y -= (int)center_y;
+    }
+
+    center_image_called_ = true;
+
+}
+
+void Util::OffsetCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
+    if (!center_image_called_) {
+        printf("FAILED to restore image offset - originCloudxy not previously called by this utility");
+        return;
+    }
+
+    // restore offset to all points 
+    for (uint16_t point_index = 0; point_index < cloud_->size(); point_index ++) {
+        cloud_->at(point_index).x += (int)image_offset_x_;
+        cloud_->at(point_index).y += (int)image_offset_y_;
     }
 
 }

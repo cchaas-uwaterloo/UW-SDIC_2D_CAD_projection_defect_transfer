@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <cstdint>
 #include <iostream>
-#include "imageReader.hpp"
+#include "ImageBuffer.hpp"
 #include "visualizer.hpp"
 #include "Solver.hpp"
 #include "util.hpp"

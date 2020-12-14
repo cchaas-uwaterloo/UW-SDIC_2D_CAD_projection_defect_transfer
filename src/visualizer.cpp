@@ -225,7 +225,7 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
   mtx.lock();
 
   //if the visualizer does not already contain the image cloud, add it
-  if(!display4_called) {
+  if(!display6_called) {
     point_cloud_display->addPointCloud(image_cloud_, id_image_);
     point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_image_);
     point_cloud_display->addPointCloud(CAD_cloud_, id_CAD_);

@@ -31,7 +31,7 @@ catkin_package(
 )
 
 # Core libraries
-add_library(image_reader STATIC src/imageReader.cpp)
+add_library(image_buffer STATIC src/ImageBuffer.cpp)
   
 add_library(visualizer STATIC src/visualizer.cpp)
   
@@ -81,7 +81,7 @@ add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EX
 target_link_libraries(${PROJECT_NAME} 
   ${catkin_LIBRARIES} 
   ${PCl_LIBRARIES}
-  image_reader 
+  image_buffer 
   visualizer 
   utils
   solver
@@ -93,7 +93,7 @@ add_dependencies(back_project_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_
 target_link_libraries(back_project_test
   ${catkin_LIBRARIES} 
   ${PCl_LIBRARIES}
-  image_reader 
+  image_buffer 
   visualizer 
   utils
   solver
@@ -104,7 +104,7 @@ add_dependencies(scale_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTE
 target_link_libraries(scale_test
   ${catkin_LIBRARIES} 
   ${PCl_LIBRARIES}
-  image_reader 
+  image_buffer 
   visualizer 
   utils
   solver
@@ -115,7 +115,7 @@ add_dependencies(convergence_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_E
 target_link_libraries(convergence_test
   ${catkin_LIBRARIES} 
   ${PCl_LIBRARIES}
-  image_reader 
+  image_buffer 
   visualizer 
   utils
   solver
@@ -126,7 +126,7 @@ add_dependencies(ladybug_images_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME
 target_link_libraries(ladybug_images_test
   ${catkin_LIBRARIES} 
   ${PCl_LIBRARIES}
-  image_reader 
+  image_buffer 
   visualizer 
   utils
   solver
@@ -137,7 +137,7 @@ add_dependencies(load_pose_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXP
 target_link_libraries(load_pose_test
   ${catkin_LIBRARIES} 
   ${PCl_LIBRARIES}
-  image_reader 
+  image_buffer 
   visualizer 
   utils
   solver
@@ -148,7 +148,7 @@ add_dependencies(simulation_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EX
 target_link_libraries(simulation_test
   ${catkin_LIBRARIES} 
   ${PCl_LIBRARIES}
-  image_reader 
+  image_buffer 
   visualizer 
   utils
   solver
@@ -160,7 +160,7 @@ add_dependencies(init_iterations_test ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAM
 target_link_libraries(init_iterations_test
   ${catkin_LIBRARIES} 
   ${PCl_LIBRARIES}
-  image_reader 
+  image_buffer 
   visualizer 
   utils
   solver
