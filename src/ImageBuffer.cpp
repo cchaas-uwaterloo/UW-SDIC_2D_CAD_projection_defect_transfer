@@ -168,5 +168,59 @@ void ImageBuffer::populateCloud (std::vector<point>* points_, pcl::PointCloud<pc
     }
 }
 
+void ImageBuffer::flattenCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, std::vector<point>* points_) {
+
+    for (uint32_t i = 0; i < cloud_->size(); i++) {
+        point to_add (cloud_->at(i).x, cloud_->at(i).y);
+        points_->push_back(to_add);
+    }
+
+}
+
+bool ImageBuffer::writeToImage (std::vector<point>* points_, std::string src_file_name_, std::string target_file_name_, std::string color_) {
+
+    cv::Vec3b color; 
+
+    if (color_ == "black") {
+        color[0] = 0;
+        color[1] = 0;
+        color[2] = 0;
+    }
+
+    if (color_ == "red") {
+        color[0] = 255;
+        color[1] = 0;
+        color[2] = 0;
+    }
+
+    if (color_ == "green") {
+        color[0] = 0;
+        color[1] = 255;
+        color[2] = 0;
+    }
+
+    if (color_ == "blue") {
+        color[0] = 0;
+        color[1] = 0;
+        color[2] = 255;
+    }
+
+    cv::Mat image;
+    image = cv::imread(src_file_name_, 1 );
+
+    for(uint32_t i = 0; i < points_->size(); i ++) {
+        
+        image.at<cv::Vec3b>(points_->at(i).y, points_->at(i).x) = color;
+
+    }
+
+    bool write_success = cv::imwrite(target_file_name_, image);
+
+    if (write_success) return true; 
+    return false;
+
+}
+
+
 
 } // namespace cam_cad 

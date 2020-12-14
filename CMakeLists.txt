@@ -19,6 +19,7 @@ find_package(catkin REQUIRED
 
 find_package(Ceres REQUIRED)
 find_package(PCL 1.8 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 
 catkin_package(
@@ -38,6 +39,10 @@ add_library(visualizer STATIC src/visualizer.cpp)
 add_library(solver STATIC src/Solver.cpp)
 
 add_library(utils STATIC src/util.cpp)
+
+target_link_libraries(image_buffer
+  ${OpenCV_LIBS}
+)
 
 target_link_libraries(visualizer 
   beam::matching
@@ -63,6 +68,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${PCl_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 

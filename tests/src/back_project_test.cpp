@@ -159,9 +159,14 @@ int main () {
         cin >> end1; 
     }
 
+    //Write crack data to image******************//
+    std::vector<cam_cad::point> output_points_CAD;
+    ImageBuffer.flattenCloud(CAD_crack_points, &output_points_CAD);
+
+    bool write_success = ImageBuffer.writeToImage(&output_points_CAD, "/home/cameron/wkrpt300_images/sim_CAD.jpg",
+                                                  "/home/cameron/wkrpt300_images/sim_CAD_annotated.jpg");
 
     printf("exiting program \n");
-
 
     return 0;
 }
