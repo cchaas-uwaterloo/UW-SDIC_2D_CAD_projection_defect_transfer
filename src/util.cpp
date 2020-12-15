@@ -20,14 +20,14 @@ void Util::getCorrespondences(pcl::CorrespondencesPtr corrs_,
 
 void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_,
-                        Eigen::Matrix4d &T_CW,
+                        Eigen::Matrix4d &T_,
                         pcl::CorrespondencesPtr corrs_) {
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>); 
     pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
     // transform the CAD cloud points to the camera frame
-    trans_cloud = this->TransformCloud(CAD_cloud_,T_CW);
+    trans_cloud = this->TransformCloud(CAD_cloud_,T_);
 
     // project the transformed points to the camera plane
     proj_cloud = this->ProjectCloud(trans_cloud);
@@ -36,13 +36,13 @@ void Util::CorrEst (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_cloud_,
     this->getCorrespondences(corrs_, proj_cloud, camera_cloud_, 1000);
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, Eigen::Matrix4d &T_CW) {
+pcl::PointCloud<pcl::PointXYZ>::Ptr Util::TransformCloud (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_, Eigen::Matrix4d &T_) {
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
     
     for(uint16_t i=0; i < cloud_->size(); i++) {
         Eigen::Vector4d point (cloud_->at(i).x, cloud_->at(i).y, cloud_->at(i).z, 1);
-        Eigen::Vector4d point_transformed = T_CW*point; 
+        Eigen::Vector4d point_transformed = T_*point; 
         pcl::PointXYZ pcl_point_transformed (point_transformed(0), point_transformed(1), point_transformed(2));
         trans_cloud->push_back(pcl_point_transformed);
     }
@@ -51,11 +51,11 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::TransformCloud (pcl::PointCloud<pcl::P
 
 }
 
-void Util::TransformCloudUpdate (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_CW) {
+void Util::TransformCloudUpdate (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Matrix4d &T_) {
     
     for(uint16_t i=0; i < cloud_->size(); i++) {
         Eigen::Vector4d point (cloud_->at(i).x, cloud_->at(i).y, cloud_->at(i).z, 1);
-        Eigen::Vector4d point_transformed = T_CW*point; 
+        Eigen::Vector4d point_transformed = T_*point; 
         pcl::PointXYZ pcl_point_transformed (point_transformed(0), point_transformed(1), point_transformed(2));
         cloud_->at(i) = pcl_point_transformed;
     }
@@ -77,8 +77,6 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::ProjectCloud (pcl::PointCloud<pcl::Poi
         
     }
 
-    //printf("projection size: %zu \n", proj_cloud->size());
-
     return proj_cloud;
 
 }
@@ -93,11 +91,11 @@ Eigen::Matrix4d Util::QuaternionAndTranslationToTransformMatrix(const std::vecto
     return T;
 }
 
-std::vector<double> Util::TransformMatrixToQuaternionAndTranslation(const Eigen::Matrix4d& T) {
-  Eigen::Matrix3d R = T.block(0, 0, 3, 3);
+std::vector<double> Util::TransformMatrixToQuaternionAndTranslation(const Eigen::Matrix4d& T_) {
+  Eigen::Matrix3d R = T_.block(0, 0, 3, 3);
   Eigen::Quaternion<double> q = Eigen::Quaternion<double>(R);
   std::vector<double> pose{q.w(),   q.x(),   q.y(),  q.z(),
-                           T(0, 3), T(1, 3), T(2, 3)};
+                           T_(0, 3), T_(1, 3), T_(2, 3)};
 }
 
 std::shared_ptr<beam_calibration::CameraModel> Util::GetCameraModel () {
@@ -113,26 +111,37 @@ void Util::SetCameraID (uint8_t cam_ID_){
     
 }
 
-Eigen::Matrix4d Util::PerturbTransformRadM(const Eigen::Matrix4d& T_in,
-                                     const Eigen::VectorXd& perturbations) {
-  Eigen::Vector3d r_perturb = perturbations.block(0, 0, 3, 1);
-  Eigen::Vector3d t_perturb = perturbations.block(3, 0, 3, 1);
-  Eigen::Matrix3d R_in = T_in.block(0, 0, 3, 3);
+Eigen::Matrix4d Util::PerturbTransformRadM(const Eigen::Matrix4d& T_in_,
+                                     const Eigen::VectorXd& perturbations_) {
+  Eigen::Vector3d r_perturb = perturbations_.block(0, 0, 3, 1);
+  Eigen::Vector3d t_perturb = perturbations_.block(3, 0, 3, 1);
+  Eigen::Matrix3d R_in = T_in_.block(0, 0, 3, 3);
   Eigen::Matrix3d R_out = LieAlgebraToR(r_perturb) * R_in;
   Eigen::Matrix4d T_out;
   T_out.setIdentity();
-  T_out.block(0, 3, 3, 1) = T_in.block(0, 3, 3, 1) + t_perturb;
+  T_out.block(0, 3, 3, 1) = T_in_.block(0, 3, 3, 1) + t_perturb;
   T_out.block(0, 0, 3, 3) = R_out;
   return T_out;
 }
 
-Eigen::Matrix4d Util::PerturbTransformDegM(const Eigen::Matrix4d& T_in,
-                                     const Eigen::VectorXd& perturbations) {
-  Eigen::VectorXd perturbations_rad(perturbations);
+Eigen::Matrix4d Util::PerturbTransformDegM(const Eigen::Matrix4d& T_in_,
+                                     const Eigen::VectorXd& perturbations_) {
+  Eigen::VectorXd perturbations_rad(perturbations_);
   perturbations_rad[0] = DegToRad(perturbations_rad[0]);
   perturbations_rad[1] = DegToRad(perturbations_rad[1]);
   perturbations_rad[2] = DegToRad(perturbations_rad[2]);
-  return PerturbTransformRadM(T_in, perturbations_rad);
+  return PerturbTransformRadM(T_in_, perturbations_rad);
+}
+
+Eigen::MatrixXd Util::RoundMatrix(const Eigen::MatrixXd& M_, const int& precision_) {
+  Eigen::MatrixXd Mround(M_.rows(), M_.cols());
+  for (int i = 0; i < M_.rows(); i++) {
+    for (int j = 0; j < M_.cols(); j++) {
+      Mround(i, j) = std::round(M_(i, j) * std::pow(10, precision_)) /
+                     std::pow(10, precision_);
+    }
+  }
+  return Mround;
 }
 
 void Util::originCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
@@ -177,17 +186,6 @@ void Util::OffsetCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
         cloud_->at(point_index).y += (int)image_offset_y_;
     }
 
-}
-
-Eigen::MatrixXd Util::RoundMatrix(const Eigen::MatrixXd& M, const int& precision) {
-  Eigen::MatrixXd Mround(M.rows(), M.cols());
-  for (int i = 0; i < M.rows(); i++) {
-    for (int j = 0; j < M.cols(); j++) {
-      Mround(i, j) = std::round(M(i, j) * std::pow(10, precision)) /
-                     std::pow(10, precision);
-    }
-  }
-  return Mround;
 }
 
 //TEST_ function
@@ -262,7 +260,7 @@ void Util::ScaleCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, float x_scale
     }
 }
 
-void Util::LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool structure_) {
+void Util::LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool inverted_) {
     // load file
     nlohmann::json J;
     std::ifstream file(file_name_);
@@ -282,7 +280,7 @@ void Util::LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool st
     // remap translations and rotations
     RemapWorldtoCameraCoords(w_initial_pose, c_initial_pose);
 
-    if (structure_ == false) {
+    if (inverted_ == false) {
         // construct the matrix describing the transformation from the world to the camera frame
         Eigen::VectorXd perturbation(6, 1);
         perturbation << -c_initial_pose[3], 0, 0, 0, 0, 0; 
@@ -360,14 +358,14 @@ void Util::TransformPose (std::string file_name_, Eigen::Matrix4d &T_, bool inve
 
 }
 
-void Util::RemapWorldtoCameraCoords (const double (&world_transform)[6], double (&camera_transform)[6]) {
+void Util::RemapWorldtoCameraCoords (const double (&world_transform_)[6], double (&camera_transform_)[6]) {
     // just a rotation
-    camera_transform[0] = -world_transform[1]; // y -> -x
-    camera_transform[1] = -world_transform[2]; // z -> -y
-    camera_transform[2] = world_transform[0]; // x -> z
-    camera_transform[4] = world_transform[5]; // beta -> alpha
-    camera_transform[5] = -world_transform[6]; // gamma -> 
-    camera_transform[6] = world_transform[4]; // alpha -> gamma
+    camera_transform_[0] = -world_transform_[1]; // y -> -x
+    camera_transform_[1] = -world_transform_[2]; // z -> -y
+    camera_transform_[2] = world_transform_[0]; // x -> z
+    camera_transform_[4] = world_transform_[5]; // beta -> alpha
+    camera_transform_[5] = -world_transform_[6]; // gamma -> 
+    camera_transform_[6] = world_transform_[4]; // alpha -> gamma
 }
 
 pcl::ModelCoefficients::Ptr Util::GetCloudPlane(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_) {

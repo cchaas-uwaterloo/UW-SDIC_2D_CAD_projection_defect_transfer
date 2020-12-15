@@ -1,6 +1,4 @@
-#ifndef CAMCAD_IMAGEBUFFER_H
-#define CAMCAD_IMAGEBUFFER_H
-
+#pragma once 
 
 #include <cstdint>
 #include <pcl/point_cloud.h>
@@ -107,4 +105,3 @@ public:
 
 }
 
-#endif

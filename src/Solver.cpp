@@ -46,10 +46,6 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
     // set initial error before optimizing
     SetInitialPixelError(proj_cloud, camera_cloud_, proj_corrs);
 
-    /*
-    printf("ready to start optimization \n");
-    */
-
     // loop problem until it has converged 
     while (!has_converged && solution_iterations_ < max_solution_iterations_) {
 

@@ -1,5 +1,4 @@
-#ifndef CAMCAD_SOLVER_H
-#define CAMCAD_SOLVER_H
+#pragma once 
 
 #include <ceres/ceres.h>
 #include <ceres/autodiff_cost_function.h>
@@ -105,30 +104,54 @@ private:
    /**
     * @brief Method for building the Ceres problem by adding the residual blocks
     * @param problem Ceres problem object
-    * @param corrs_ 
+    * @param corrs_ nearest-neighbor correspondences between the CAD cloud projection and the camera cloud
+    * @param camera_model_ camera model
+    * @param camera_cloud_ target image point cloud 
+    * @param cad_cloud_ CAD cloud (un-transformed, centered in x and y, correct scale)
     */
     void BuildCeresProblem (std::shared_ptr<ceres::Problem>& problem, pcl::CorrespondencesPtr corrs_, 
                         const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
                         pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::ConstPtr cad_cloud_);
 
-    //initialize the ceres solver options for the problem
+   /**
+    * @brief Method setting ceres solver options, these are mostly based on parameters read in from the 
+    * SolutionParameters.json file or set by public setters
+    */
     std::shared_ptr<ceres::Problem> SetupCeresOptions ();
 
-    //set solution options and iterate through ceres solution
+   /**
+    * @brief Method to call the ceres solver on the individual ceres problem
+    * @param problem ceres problem object
+    * @param output_results used to toggle ceres terminal output on and off
+    */
     void SolveCeresProblem (const std::shared_ptr<ceres::Problem>& problem, bool output_results);
 
-    // TODO add transform convergence check with a given initial transform
-
-    //check convergence by determining the error between the projection and image (query = projection, match = camera)
+   /**
+    * @brief Method to check the overall problem for convergence by checking the average error in pixels between 
+    * the projected points and the image points
+    * @param query_cloud_ projected cloud 
+    * @param match_cloud_ image cloud 
+    * @param corrs_ nearest-neighbor correspondences between the CAD cloud projection and the camera cloud
+    * @param pixel_threshold_ threshold for convergence condition 
+    */
     bool CheckPixelConvergence(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
                           pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_);
 
-    //Read solution parameters from the json configuration file, 
-    //Note that the initial pose and cad scale set here are config defaults, they can be overwritten by calling the 
-    //dedicated setters
+   /**
+    * @brief Method to read the solution parameters from the SolutionParameters.json file
+    * the initial pose and cad scale set in the file are defaults and can be overwritten 
+    * by calling the dedicated setters
+    * @param file_name_ absolute path to the solution parameters json file 
+    */
     void ReadSolutionParams(std::string file_name_);
 
+   /**
+    * @brief Method to save the initial pixel error before the solution for reference
+    * @param query_cloud_ projected cloud 
+    * @param match_cloud_ image cloud
+    * @param corrs_ nearest-neighbor correspondences between the CAD cloud projection and the camera cloud
+    */
     void SetInitialPixelError(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
                           pcl::CorrespondencesPtr corrs_);
 
@@ -145,7 +168,6 @@ private:
     // Solution parameters
     uint32_t max_solution_iterations_, max_ceres_iterations_; 
     std::string cam_intrinsics_file_, convergence_type_;
-
     bool minimizer_progress_to_stdout_, transform_progress_to_stdout_, visualize_; 
     uint32_t max_solver_time_in_seconds_;
     double function_tolerance_, gradient_tolerance_, parameter_tolerance_, cloud_scale_, convergence_limit_;
@@ -154,7 +176,7 @@ private:
 
     uint8_t solution_iterations_;
 
-    std::vector<double> results; //stores the incremental results of the ceres solution
+    std::vector<double> results; // stores the incremental results of the ceres solution
 
     std::shared_ptr<beam_calibration::CameraModel> camera_model;
 
@@ -162,5 +184,3 @@ private:
 
 
 }
-
-#endif
