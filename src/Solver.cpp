@@ -253,10 +253,8 @@ void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::Co
                                 se3_parameterization_.get());
 
     for (int i = 0; i < corrs_->size(); i++) {
-        //pixel 
         Eigen::Vector2d pixel (camera_cloud_->at(corrs_->at(i).index_match).x,camera_cloud_->at(corrs_->at(i).index_match).y);
 
-        //P_STRUCT
         Eigen::Vector3d P_STRUCT (cad_cloud_->at(corrs_->at(i).index_query).x,
                                   cad_cloud_->at(corrs_->at(i).index_query).y,
                                   cad_cloud_->at(corrs_->at(i).index_query).z);
@@ -303,8 +301,6 @@ bool Solver::CheckPixelConvergence(pcl::PointCloud<pcl::PointXYZ>::ConstPtr quer
   // average pixel error
   pixel_error /= corrs_->size();
 
-  //printf ("the average pixel error is: %f\n", pixel_error);
-
   if (pixel_error <= pixel_threshold_)
     return true;
 
@@ -343,7 +339,6 @@ void Solver::ReadSolutionParams(std::string file_name_) {
 
 
   // Load default initial pose
-  // default rotations are applied successively around x,y,z
   T_CS = Eigen::Matrix4d::Identity();
   Eigen::VectorXd perturbation(6, 1);
   perturbation << initial_alpha, 0, 0, 0, 0, 0; 

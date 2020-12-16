@@ -10,6 +10,9 @@
 #include <Eigen/Geometry>
 
 
+/**
+ * @brief Program to test the camera pose estimation solver on a distorted ladybug camera image
+ */
 int main () {
 
     printf("Started... \n");

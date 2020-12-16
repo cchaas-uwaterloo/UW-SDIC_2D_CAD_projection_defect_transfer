@@ -8,8 +8,10 @@
 #include <X11/Xlib.h> 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
-    
-    
+
+/**
+ * @brief Program to test the GetCloudScale function on a simulated CAD cloud
+ */
 int main () {
 
     cam_cad::ImageBuffer ImageBuffer;

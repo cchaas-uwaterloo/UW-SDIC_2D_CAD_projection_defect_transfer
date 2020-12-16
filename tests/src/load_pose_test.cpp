@@ -10,6 +10,10 @@
 #include <Eigen/Geometry>
 #include <stdio.h>
 
+/**
+ * @brief Program to test loading the initial relative camera, robot, and structure poses 
+ * from dedicated json files for the pose estimation solver 
+ */
 void LoadInitialPose (std::string file_name_);
 
 std::shared_ptr<cam_cad::Util> util (new cam_cad::Util());

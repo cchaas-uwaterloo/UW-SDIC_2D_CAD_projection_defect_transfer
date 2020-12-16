@@ -11,13 +11,21 @@
 #include <random>
 #include <fstream>
 
-// Alternate Radtan intrinsics 
-/*
-    -0.2294924671994032,
-    0.18008566892263364,
-    -0.0005326294604360527,
-    -0.0004378797791316729
-*/
+/**
+ * @brief test program to find convergence rate with respect to initial perturbation from perfect 
+ * and number of ceres solver iterations at each step of the overall solution.
+ * Given a perfect initialization, the solver is run with 5 levels of initial perturbation:
+ * level  translation (% of largest translation in true transform)  rotation (degrees)
+ *     1                                                       0-5                 0-2
+ *     2                                                      5-10                 2-5
+ *     3                                                     10-15                 5-8
+ *     4                                                     15-20                8-10
+ *     5                                                     20-25               10-12
+ * for each level of initial perturbation, the solver is run on 100 randomly generated initial 
+ * perturbations within the level bounds.
+ * This is repeated with 5, 10, 15, 20, 25, 30, 35, 40, 45, 50 ceres iterations configured for the solution.
+ * Results are written to a file specified. 
+ */
 
 const uint8_t NUM_PERTURBATIONS = 100;
 
@@ -93,6 +101,7 @@ int main () {
                                     0,           0,           0,           1;
 
 
+    // call with perfect intialization for the initial pose
     testOne(perfect_init_two, input_cloud_camera, input_cloud_CAD);
 
     fout.close();

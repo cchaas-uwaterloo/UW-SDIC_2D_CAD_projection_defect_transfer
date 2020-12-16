@@ -107,7 +107,7 @@ void Util::ReadCameraModel (std::string intrinsics_file_path_) {
 }
 
 void Util::SetCameraID (uint8_t cam_ID_){
-    //camera_model->SetCameraID(cam_ID_);
+    camera_model->SetCameraID(cam_ID_);
     
 }
 
@@ -188,7 +188,6 @@ void Util::OffsetCloudxy (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
 
 }
 
-//TEST_ function
 void Util::rotateCCWxy(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_) {
     // determine max x,y values
     uint32_t max_x = 0, max_y = 0;
@@ -281,7 +280,7 @@ void Util::LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool in
     RemapWorldtoCameraCoords(w_initial_pose, c_initial_pose);
 
     if (inverted_ == false) {
-        // construct the matrix describing the transformation from the world to the camera frame
+        // load forward transform
         Eigen::VectorXd perturbation(6, 1);
         perturbation << -c_initial_pose[3], 0, 0, 0, 0, 0; 
         T_ = PerturbTransformDegM(T_, perturbation); 
@@ -293,7 +292,7 @@ void Util::LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool in
         T_ = PerturbTransformDegM(T_, perturbation); 
     }
     else {
-        // construct the matrix describing the transformation from the structure frame to the world frame
+        // load inverse transform
         Eigen::VectorXd perturbation(6, 1);
         perturbation << c_initial_pose[3], 0, 0, 0, 0, 0; 
         T_ = PerturbTransformDegM(T_, perturbation); 
@@ -305,10 +304,6 @@ void Util::LoadInitialPose (std::string file_name_, Eigen::Matrix4d &T_, bool in
         T_ = PerturbTransformDegM(T_, perturbation); 
     }
 
-
-    printf("loaded initial camera transformation\n");
-    std::string sep = "\n----------------------------------------\n";
-    std::cout << T_ << sep;
 }
 
 void Util::TransformPose (std::string file_name_, Eigen::Matrix4d &T_, bool inverted_) {
@@ -373,9 +368,7 @@ pcl::ModelCoefficients::Ptr Util::GetCloudPlane(pcl::PointCloud<pcl::PointXYZ>::
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
     // Create the segmentation object
     pcl::SACSegmentation<pcl::PointXYZ> seg;
-    // Optional
     seg.setOptimizeCoefficients (true);
-    // Mandatory
     seg.setModelType (pcl::SACMODEL_PLANE);
     seg.setMethodType (pcl::SAC_RANSAC);
     seg.setDistanceThreshold (0.01);
@@ -401,7 +394,6 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::BackProject(pcl::PointCloud<pcl::Point
     printf ("BACK PROJECT: got plane normal and point \n");
 
     for (uint32_t i = 0; i < image_cloud_->size(); i++) {
-        //Eigen::Vector3d image_point (image_cloud_->at(i).x, image_cloud_->at(i).y, image_cloud_->at(i).z);
         Eigen::Vector3d image_point (0,0,0);
         Eigen::Vector2i image_pixel (image_cloud_->at(i).x, image_cloud_->at(i).y);
         Eigen::Vector3d ray_unit_vector = camera_model->BackProject(image_pixel).value().normalized();
@@ -420,8 +412,6 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr Util::BackProject(pcl::PointCloud<pcl::Point
     return back_projected_cloud;
 
 }
-
-// Private functions
 
 Eigen::Matrix3d Util::LieAlgebraToR(const Eigen::Vector3d& eps) {
   return SkewTransform(eps).exp();

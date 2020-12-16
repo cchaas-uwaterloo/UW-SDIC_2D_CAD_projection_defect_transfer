@@ -22,13 +22,13 @@ bool ImageBuffer::readPoints (std::string filename_, std::vector<point>* points_
         return false;
     }
 
-    //parse input string for points
+    // parse input string for points
 
-    //jump to start of points section of JSON
+    // jump to start of points section of JSON
     uint16_t read_index = input_string.find("points");
     input_string = input_string.substr(read_index);
 
-    //add all points to point vector
+    // add all points to point vector
     uint16_t num_points = 0;
     point current_point; 
     current_point.x = 0;
@@ -65,10 +65,10 @@ bool ImageBuffer::readPoints (std::string filename_, std::vector<point>* points_
 }
 
 void ImageBuffer::scalePoints (std::vector<point>* points_, float scale_) {
-    //scale points based on image scale (for CAD images)
+    // scale points based on image scale (for CAD images)
     uint16_t num_points = points_->size(); 
 
-    //pop each point out of the vector, update value and push to back to retain order of the vector 
+    // pop each point out of the vector, update value and push to back to retain order of the vector 
     for (uint16_t point_index = 0; point_index < num_points; point_index ++) {
         point current_point = points_->at(0);
 
@@ -82,9 +82,8 @@ void ImageBuffer::scalePoints (std::vector<point>* points_, float scale_) {
 }
 
 void ImageBuffer::densifyPoints (std::vector<point>* points_, uint8_t density_index_) {
-    //add additional point between existing points according to scale
-    //will help to converge solution
-    //want to maintain order of vector for display and intuitive purposes
+    // add additional point between existing points according to scale
+    // will help to converge solution
     uint16_t init_length = points_->size();
  
 
@@ -94,7 +93,7 @@ void ImageBuffer::densifyPoints (std::vector<point>* points_, uint8_t density_in
 
         points_->erase(points_->begin());
 
-        //determine angle between points 
+        // determine angle between points 
         float slope, theta;
 
         if ((current_end_point.x-current_start_point.x) == 0) {
@@ -108,41 +107,41 @@ void ImageBuffer::densifyPoints (std::vector<point>* points_, uint8_t density_in
             theta = std::atan(std::abs(slope));
         }
 
-        //determine distance between points 
+        // determine distance between points 
         float dist = std::sqrt(std::pow(std::abs(current_end_point.x-current_start_point.x),2) 
                                + std::pow(std::abs(current_end_point.y-current_start_point.y),2));
 
-        //number of points added between each reference point should be the same for both images for 1:1 mapping
+        // number of points added between each reference point should be the same for both images for 1:1 mapping (in final solution)
         float interval = dist/(density_index_+1);
 
-        //determine delta x and y values based on quadrant
+        // determine delta x and y values based on quadrant
         float dx, dy; 
 
-        //first quadrant: 
+        // first quadrant: 
         if ((current_end_point.y-current_start_point.y) >= 0 && (current_end_point.x-current_start_point.x) >= 0) {
             dx = interval*(std::cos(theta)); 
             dy = interval*(std::sin(theta));
         }
-        //second quadrant 
+        // second quadrant 
         else if ((current_end_point.y-current_start_point.y) >= 0 && (current_end_point.x-current_start_point.x) < 0) {
             dx = -interval*(std::cos(theta)); 
             dy = interval*(std::sin(theta));
         }
-        //third quadrant 
+        // third quadrant 
         else if ((current_end_point.y-current_start_point.y) < 0 && (current_end_point.x-current_start_point.x) <= 0) {
             dx = -interval*(std::cos(theta)); 
             dy = -interval*(std::sin(theta));
         }
-        //fourth quadrant 
+        // fourth quadrant 
         else if ((current_end_point.y-current_start_point.y) < 0 && (current_end_point.x-current_start_point.x) > 0) {
             dx = interval*(std::cos(theta)); 
             dy = -interval*(std::sin(theta));
         }
 
-        //push the start point first to conserve the order of the vector 
+        // push the start point first to conserve the order of the vector 
         points_->push_back(current_start_point); 
 
-        //push the rest of the interpolated points, trending toward the current end point 
+        // push the rest of the interpolated points, trending toward the current end point 
         uint16_t current_x_coord = current_start_point.x + dx; 
         uint16_t current_y_coord = current_start_point.y + dy;
 

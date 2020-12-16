@@ -9,15 +9,12 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
-// Alternate Radtan intrinsics 
-/*
-    -0.2294924671994032,
-    0.18008566892263364,
-    -0.0005326294604360527,
-    -0.0004378797791316729
-*/
-
-
+/**
+ * @brief program to test the back projection of crack points onto the surface of the CAD clound once the 
+ * solution converges. 
+ * The re-transformation back to the xy plane of the CAD cloud and the crack points and the output to the CAD
+ * drawing is also tested. 
+ */
 pcl::PointCloud<pcl::PointXYZ>::Ptr createTestCrackPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera_);
 
 int main () {

@@ -9,15 +9,10 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
-// Alternate Radtan intrinsics 
-/*
-    -0.2294924671994032,
-    0.18008566892263364,
-    -0.0005326294604360527,
-    -0.0004378797791316729
-*/
-
-
+/**
+ * @brief Program to test the convergence check for the camera pose estimation and find 
+ * realistic convergence criteria
+ */
 int main () {
 
     printf("Started... \n");
