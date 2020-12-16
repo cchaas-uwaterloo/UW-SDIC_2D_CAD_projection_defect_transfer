@@ -44,14 +44,38 @@ target_link_libraries(image_buffer
   ${OpenCV_LIBS}
 )
 
+target_include_directories(image_buffer
+  PUBLIC
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${PCl_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+)
+
 target_link_libraries(visualizer 
   beam::matching
   beam::filtering
   ${PCl_LIBRARIES}
 )
 
+target_include_directories(visualizer
+  PUBLIC
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${PCl_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+)
+
 target_link_libraries(utils
   beam::calibration
+)
+
+target_include_directories(utils
+  PUBLIC
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${PCl_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 target_link_libraries(solver
@@ -63,13 +87,21 @@ target_link_libraries(solver
    ${CERES_LIBRARIES}
 )
 
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-  ${PCl_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
+target_include_directories(solver
+  PUBLIC
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${PCl_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
 )
+
+
+#include_directories(
+#  include
+#  ${catkin_INCLUDE_DIRS}
+#  ${PCl_INCLUDE_DIRS}
+#  ${OpenCV_INCLUDE_DIRS}
+#)
 
 
 link_directories(${PROJECT_NAME}

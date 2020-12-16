@@ -111,9 +111,6 @@ public:
                        std::string id3_,
                        std::string id4_);
 
-    // display camera and projected points in 2D with correspondences
-    //NOTE_ take correspondences from projected points to image points
-
     /**
      * @brief Method to display an image cloud, projected cloud and correspondences 
      * @param image_cloud_ labelled image point cloud
@@ -149,6 +146,7 @@ public:
 private: 
     pcl::visualization::PCLVisualizer::Ptr point_cloud_display;
     std::thread vis_thread;
+
     //mutex for the point_cloud_display object, held by the main thread when updating the visualization params
     std::mutex mtx;
 
