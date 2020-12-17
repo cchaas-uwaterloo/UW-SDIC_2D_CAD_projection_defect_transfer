@@ -53,7 +53,7 @@ To note is that the visualizer runs in its own thread and does not itself block 
 
 ## Next steps 
 ### Further development
-For further development of this module the following next steps cloud be taken: 
+For further development of this module the following next steps could be taken: 
 1. Create/Find tool to convert pdfs to jpgs/pngs 
 - image labelling and writing cannot be done directly on pdfs 
 - a tool to convert pdfs to jpg or png format and vice versa is necessary to work with actual CAD drawings
@@ -71,6 +71,7 @@ For further development of this module the following next steps cloud be taken:
 - currently points are added at intervals that are a fraction of the distance between the original points
 - this affects the pose estimation because some regions of the structure outline clouds are more dense and are weighted more heavily in the Ceres solver
 - points should be added to the original point sets at regular intervals 
+5. Automatically find and label structure onlines and defects in camera images and CAD drawings (likely a separate project)
 
 There are also several minor changes to the source code identified with @todo tags that could (probably should) be made. 
 
