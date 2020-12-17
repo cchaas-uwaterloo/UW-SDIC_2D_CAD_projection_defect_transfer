@@ -27,7 +27,7 @@ To accurately transfer outlines of defects from a camera image taken at an arbit
 
 The pose estimation solver workflow:
 
-![Alt text](/readme_images/Solver_flow.png?raw=true "CAD workflow")
+![Alt text](/readme_images/solver_workflow.png?raw=true "CAD workflow")
 
 ## Instructions for use
 ### building and running 
