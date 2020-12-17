@@ -25,6 +25,7 @@
  * perturbations within the level bounds.
  * This is repeated with 5, 10, 15, 20, 25, 30, 35, 40, 45, 50 ceres iterations configured for the solution.
  * Results are written to a file specified. 
+ * It is recommended to run this with visualization disabled in the solver 
  */
 
 const uint8_t NUM_PERTURBATIONS = 100;
