@@ -18,7 +18,8 @@ Visualizer::~Visualizer() {
 }
 
 void Visualizer::startVis(uint16_t coord_size) {
-  point_cloud_display = boost::make_shared<pcl::visualization::PCLVisualizer> (display_name);
+  point_cloud_display = 
+    boost::make_shared<pcl::visualization::PCLVisualizer> (display_name);
   point_cloud_display->setBackgroundColor (0, 0, 0);
   point_cloud_display->addCoordinateSystem (coord_size);
   point_cloud_display->initCameraParameters ();
@@ -34,15 +35,18 @@ void Visualizer::endVis() {
   vis_thread.join();
 }
 
-void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, std::string id_) {
+void Visualizer::displayClouds
+  (pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, std::string id_) {
   
-  // get mutex for visulalizer spinning in vis thread and either create a new cloud or update the existing one
+  // get mutex for visulalizer spinning in vis thread 
+  // and either create a new cloud or update the existing one
   mtx.lock();
 
   // if the visualizer does not already contain the point cloud, add it
   if(!display1_called) {
     point_cloud_display->addPointCloud(cloud_, id_,0);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_);
     point_cloud_display->resetCamera();    
   }
 
@@ -61,16 +65,19 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1_,
                                 std::string id1_,
                                 std::string id2_) {
   
-  // get mutex for visulalizer spinning in vis thread and either create a new cloud or update the existing one
+  // get mutex for visulalizer spinning in vis thread 
+  // and either create a new cloud or update the existing one
   mtx.lock();
 
   // if the visualizer does not already contain the image cloud, add it
   if(!display2_called) {
     point_cloud_display->addPointCloud(cloud1_, id1_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id1_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id1_);
     point_cloud_display->resetCamera();
     point_cloud_display->addPointCloud(cloud2_, id2_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id2_);  
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id2_);  
     point_cloud_display->resetCamera();  
   }
 
@@ -94,19 +101,23 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1_,
                        std::string id2_,
                        std::string id3_) {
 
-  // get mutex for visulalizer spinning in vis thread and either create a new cloud or update the existing one
+  // get mutex for visulalizer spinning in vis thread 
+  // and either create a new cloud or update the existing one
   mtx.lock();
 
   // if the visualizer does not already contain the image cloud, add it
   if(!display3_called) {
     point_cloud_display->addPointCloud(cloud1_, id1_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id1_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id1_);
     point_cloud_display->resetCamera();
     point_cloud_display->addPointCloud(cloud2_, id2_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id2_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id2_);
     point_cloud_display->resetCamera();
     point_cloud_display->addPointCloud(cloud3_, id3_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id3_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id3_);
     point_cloud_display->resetCamera();
   }
   // otherwise, update the existing cloud
@@ -132,22 +143,27 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud1_,
                        std::string id3_,
                        std::string id4_) {
 
-  // get mutex for visulalizer spinning in vis thread and either create a new cloud or update the existing one
+  // get mutex for visulalizer spinning in vis thread and 
+  // either create a new cloud or update the existing one
   mtx.lock();
 
   // if the visualizer does not already contain the image cloud, add it
   if(!display3_called) {
     point_cloud_display->addPointCloud(cloud1_, id1_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id1_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id1_);
     point_cloud_display->resetCamera();
     point_cloud_display->addPointCloud(cloud2_, id2_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id2_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id2_);
     point_cloud_display->resetCamera();
     point_cloud_display->addPointCloud(cloud3_, id3_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id3_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id3_);
     point_cloud_display->resetCamera();
     point_cloud_display->addPointCloud(cloud4_, id4_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id4_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id4_);
     point_cloud_display->resetCamera();
   }
 
@@ -171,15 +187,18 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
                                 std::string id_image_,
                                 std::string id_projected_) {
 
-  // get mutex for visulalizer spinning in vis thread and either create a new cloud or update the existing one
+  // get mutex for visulalizer spinning in vis thread and 
+  // either create a new cloud or update the existing one
   mtx.lock();
 
   // if the visualizer does not already contain the image cloud, add it
   if(!display3_called) {
     point_cloud_display->addPointCloud(image_cloud_, id_image_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_image_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_image_);
     point_cloud_display->addPointCloud(projected_cloud_, id_projected_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_projected_); 
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_projected_); 
   }
   // otherwise, update the existing cloud
   else {
@@ -198,7 +217,8 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr image_cloud_,
     uint16_t proj_point_index = corrs_->at(i).index_query;
     uint16_t cam_point_index = corrs_->at(i).index_match;
 
-    point_cloud_display->addLine(projected_cloud_->at(proj_point_index), image_cloud_->at(cam_point_index),
+    point_cloud_display->addLine(projected_cloud_->at(proj_point_index), 
+                                 image_cloud_->at(cam_point_index),
                                  0, 255, 0, std::to_string(line_id));
     line_start_index += 2;
     line_end_index += 2;
@@ -219,17 +239,21 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
                         std::string id_CAD_,
                         std::string id_projected_) {
 
-  // get mutex for visulalizer spinning in vis thread and either create a new cloud or update the existing one
+  // get mutex for visulalizer spinning in vis thread and 
+  // either create a new cloud or update the existing one
   mtx.lock();
 
   // if the visualizer does not already contain the image cloud, add it
   if(!display6_called) {
     point_cloud_display->addPointCloud(image_cloud_, id_image_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_image_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_image_);
     point_cloud_display->addPointCloud(CAD_cloud_, id_CAD_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_CAD_);
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id_CAD_);
     point_cloud_display->addPointCloud(projected_cloud_, id_projected_);
-    point_cloud_display->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, id_projected_); 
+    point_cloud_display->setPointCloudRenderingProperties 
+      (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, id_projected_); 
     point_cloud_display->resetCamera();
   }
 
@@ -253,7 +277,8 @@ void Visualizer::displayClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr image_cl
     uint16_t proj_point_index = corrs_->at(i).index_query;
     uint16_t cam_point_index = corrs_->at(i).index_match;
 
-    point_cloud_display->addLine(projected_cloud_->at(proj_point_index), image_cloud_->at(cam_point_index),
+    point_cloud_display->addLine(projected_cloud_->at(proj_point_index), 
+                                 image_cloud_->at(cam_point_index),
                                  0, 255, 0, std::to_string(line_id));
     line_start_index += 2;
     line_end_index += 2;

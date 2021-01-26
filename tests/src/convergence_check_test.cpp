@@ -21,17 +21,22 @@ int main () {
     cam_cad::Util mainUtility;
     std::shared_ptr<cam_cad::Util> solverUtility (new cam_cad::Util);
     cam_cad::Visualizer vis1("visualizer");
-    std::shared_ptr<cam_cad::Visualizer> solverVisualizer (new cam_cad::Visualizer ("solution visualizer"));
+    std::shared_ptr<cam_cad::Visualizer> solverVisualizer 
+        (new cam_cad::Visualizer ("solution visualizer"));
     std::vector<cam_cad::point> input_points_camera, input_points_CAD; 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera 
+        (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD 
+        (new pcl::PointCloud<pcl::PointXYZ>);
 
     //image and CAD data input block//
 
     bool read_success_camera = false, read_success_CAD = false; 
 
-    std::string camera_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/-3.000000_0.000000.json";
-    std::string CAD_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/sim_CAD.json";
+    std::string camera_file_location = 
+        "/home/cameron/wkrpt300_images/testing/labelled_images/-3.000000_0.000000.json";
+    std::string CAD_file_location = 
+        "/home/cameron/wkrpt300_images/testing/labelled_images/sim_CAD.json";
     std::cout << camera_file_location << std::endl;
     std::cout << CAD_file_location << std::endl;
 
@@ -48,7 +53,7 @@ int main () {
     //input cloud operations*********//
 
     ImageBuffer.densifyPoints(&input_points_camera, 10);
-    ImageBuffer.densifyPoints(&input_points_CAD, 10);
+    ImageBuffer.densifyPoints(&input_points_CAD, 2);
 
     //ImageBuffer.scalePoints(&input_points_CAD, 0.01);
 
@@ -65,7 +70,8 @@ int main () {
 
     //Solver Block*******************//
 
-    std::string config_file_location = "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/SolutionParameters.json";
+    std::string config_file_location = 
+        "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/SolutionParameters.json";
 
     cam_cad::Solver solver(solverVisualizer, solverUtility, config_file_location);
 
@@ -85,7 +91,7 @@ int main () {
         std::cout << T_CS_final << sep;
 
     } 
-    else printf ("It failed. Just like you. Figure it out.\n");
+    else printf ("It failed.\n");
 
 
     //*******************************//

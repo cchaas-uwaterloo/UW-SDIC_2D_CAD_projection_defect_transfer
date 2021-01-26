@@ -32,7 +32,8 @@ const uint8_t NUM_PERTURBATIONS = 100;
 
 void setPerturbations (double (&perturbation_set_)[5][NUM_PERTURBATIONS][6], double max_translation_);
 
-void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera_, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD_);
+void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera_, 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD_);
 
 cam_cad::ImageBuffer ImageBuffer;
 cam_cad::Util mainUtility;
@@ -42,7 +43,7 @@ ofstream fout;
 
 int main () {
 
-    fout.open("/home/cameron/wkrpt300_images/testing/test_1_2.txt");
+    fout.open("/home/cameron/wkrpt300_images/testing/test_1_3.txt");
 
     fout << "Started... \n";
 
@@ -54,8 +55,10 @@ int main () {
     pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD (new pcl::PointCloud<pcl::PointXYZ>);
 
-    std::string camera_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/-3.000000_0.000000.json";
-    std::string CAD_file_location = "/home/cameron/wkrpt300_images/testing/labelled_images/sim_CAD.json";
+    std::string camera_file_location = 
+        "/home/cameron/wkrpt300_images/testing/labelled_images/-3.000000_0.000000.json";
+    std::string CAD_file_location = 
+        "/home/cameron/wkrpt300_images/testing/labelled_images/sim_CAD.json";
     std::cout << camera_file_location << std::endl;
     std::cout << CAD_file_location << std::endl;
 
@@ -72,7 +75,7 @@ int main () {
     //input cloud operations*********//
 
     ImageBuffer.densifyPoints(&input_points_camera, 10);
-    ImageBuffer.densifyPoints(&input_points_CAD, 10);
+    ImageBuffer.densifyPoints(&input_points_CAD, 2);
 
     //ImageBuffer.scalePoints(&input_points_CAD, 0.01);
 
@@ -110,12 +113,16 @@ int main () {
     return 0;
 }
 
-void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera_, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD_) {
+void testOne (Eigen::Matrix4d perfect_init_, 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_camera_, 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_CAD_) {
     
     //check initial pose with default solution settings 
     std::shared_ptr<cam_cad::Util> solverUtility (new cam_cad::Util);
-    std::shared_ptr<cam_cad::Visualizer> solverVisualizer (new cam_cad::Visualizer ("solution visualizer"));
-    std::string config_file_location = "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/SolutionParameters.json";
+    std::shared_ptr<cam_cad::Visualizer> solverVisualizer 
+        (new cam_cad::Visualizer ("solution visualizer"));
+    std::string config_file_location = 
+        "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/SolutionParameters.json";
 
     cam_cad::Solver solver(solverVisualizer, solverUtility, config_file_location);
 
@@ -123,10 +130,12 @@ void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr
 
     bool convergence = solver.SolveOptimization(input_cloud_CAD_, input_cloud_camera_);
 
-    bool good_init = false;
+    bool good_init = true;
 
     if (convergence) {
         Eigen::Matrix4d T_CS_final = solver.GetTransform();
+
+        std::cout << "convergence" << std::endl;
 
         if (mainUtility.RoundMatrix(perfect_init_, 1) == mainUtility.RoundMatrix(T_CS_final, 1))
             good_init = true;
@@ -142,9 +151,12 @@ void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr
 
     double max_initial_translation = 0;
 
-    if (perfect_init_(0,3) > max_initial_translation) max_initial_translation = perfect_init_(0,3); // x translation
-    if (perfect_init_(1,3) > max_initial_translation) max_initial_translation = perfect_init_(1,3); // y translation
-    if (perfect_init_(2,3) > max_initial_translation) max_initial_translation = perfect_init_(2,3); // z_translation
+    if (perfect_init_(0,3) > max_initial_translation) 
+        max_initial_translation = perfect_init_(0,3); // x translation
+    if (perfect_init_(1,3) > max_initial_translation) 
+        max_initial_translation = perfect_init_(1,3); // y translation
+    if (perfect_init_(2,3) > max_initial_translation) 
+        max_initial_translation = perfect_init_(2,3); // z_translation
 
     // perturbation size > random perturbation > perturbation components 
     double perturbation_set[5][NUM_PERTURBATIONS][6];
@@ -157,11 +169,12 @@ void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr
 
     fout << "\ninital pose: (-3, 0)\n";
 
-    uint16_t max_ceres_iterations[10] = {5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
+    uint16_t max_ceres_iterations[1] = {25};
 
     // ceres iterations
-    for (uint8_t ceres_init = 0; ceres_init < 10; ceres_init ++) {
-        fout << "\nsolving with " << max_ceres_iterations[ceres_init] << " max ceres iterations: \n";
+    for (uint8_t ceres_init = 0; ceres_init < 1; ceres_init ++) {
+        fout << "\nsolving with " << max_ceres_iterations[ceres_init] 
+            << " max ceres iterations: \n";
         fout << "-------------------------------------\n";
 
         // perturbation level
@@ -187,16 +200,20 @@ void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr
                                          perturbation_set[level][perturbation_i][2];
                 init_T = mainUtility.PerturbTransformDegM(init_T, perturbation); 
 
-                std::shared_ptr<cam_cad::Util> solverUtility_i (new cam_cad::Util);
-                std::shared_ptr<cam_cad::Visualizer> solverVisualizer_i (new cam_cad::Visualizer ("solution visualizer"));
+                std::shared_ptr<cam_cad::Util> solverUtility_i 
+                    (new cam_cad::Util);
+                std::shared_ptr<cam_cad::Visualizer> solverVisualizer_i 
+                    (new cam_cad::Visualizer ("solution visualizer"));
 
-                cam_cad::Solver solver_i(solverVisualizer_i, solverUtility_i, config_file_location);
+                cam_cad::Solver solver_i(solverVisualizer_i, 
+                                         solverUtility_i, config_file_location);
 
                 solver_i.LoadInitialPose(init_T);
 
                 solver_i.SetMaxMinimizerIterations(max_ceres_iterations[ceres_init]);
 
-                bool convergence_i = solver_i.SolveOptimization(input_cloud_CAD_, input_cloud_camera_);
+                bool convergence_i = 
+                    solver_i.SolveOptimization(input_cloud_CAD_, input_cloud_camera_);
 
                 if (convergence_i) {
                     num_succeeded ++; 
@@ -206,15 +223,20 @@ void testOne (Eigen::Matrix4d perfect_init_, pcl::PointCloud<pcl::PointXYZ>::Ptr
 
             avg_sol_iterations /= num_succeeded;
 
-            fout << "percent of solutions completed successfully: " << num_succeeded << "\n";
-            fout << "average solver iterations for successful solutions: " << avg_sol_iterations << "\n";
+            fout << "percent of solutions completed successfully: " 
+                 << num_succeeded << "\n";
+            fout << "average solver iterations for successful solutions: " 
+                 << avg_sol_iterations << "\n";
 
         }
     }
 
+    return;
+
 }
 
-void setPerturbations (double (&perturbation_set_)[5][NUM_PERTURBATIONS][6], double max_translation_) {
+void setPerturbations 
+    (double (&perturbation_set_)[5][NUM_PERTURBATIONS][6], double max_translation_) {
     
     double min_translations_level[5] = {0, 
                                         0.051*max_translation_, 
@@ -254,15 +276,19 @@ void setPerturbations (double (&perturbation_set_)[5][NUM_PERTURBATIONS][6], dou
 
             // translations
             for (uint8_t trans = 0; trans < 3; trans ++) {
-                std::uniform_real_distribution<double> unif(lower_trans_bound, upper_trans_bound);
-                perturbation_set_[level][perturbation][trans] = upper_trans_bound/2 - unif(gen);
+                std::uniform_real_distribution<double> unif(lower_trans_bound, 
+                                                            upper_trans_bound);
+                perturbation_set_[level][perturbation][trans] 
+                    = upper_trans_bound/2 - unif(gen);
             }
 
             // rotations
             for (uint8_t rot = 3; rot < 6; rot ++) {
-                std::uniform_real_distribution<double> unif(lower_rotation_bound, upper_rotation_bound);
+                std::uniform_real_distribution<double> unif(lower_rotation_bound, 
+                                                            upper_rotation_bound);
                 std::default_random_engine re;
-                perturbation_set_[level][perturbation][rot] = upper_rotation_bound/2 - unif(gen);
+                perturbation_set_[level][perturbation][rot] 
+                    = upper_rotation_bound/2 - unif(gen);
             }
 
         }

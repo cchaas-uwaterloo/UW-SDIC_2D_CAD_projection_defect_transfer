@@ -64,12 +64,14 @@ public:
    * @param CAD_cloud_ CAD structure cloud (centered, at correct scale, untransformed)
    * @param camera_cloud_ camera image label cloud
    * @param T_ transformation matrix to apply to CAD cloud before projecting (usually T_CS)
-   * @param corrs_ nearest-neighbor correspondences between the CAD cloud projection and the camera image cloud 
+   * @param corrs_ nearest-neighbor correspondences between the CAD cloud projection and the camera image cloud
+   * @param offset_type_ type of offset to use for correspondence generation (options: "center", "centroid", "none") 
    */
     void CorrEst (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_cloud_,
                         pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_,
                         Eigen::Matrix4d &T_,
-                        pcl::CorrespondencesPtr corrs_);
+                        pcl::CorrespondencesPtr corrs_,
+                        std::string offset_type_);
 
   /**
    * @brief Method to apply a transform to a point cloud
@@ -258,6 +260,12 @@ public:
                                                     pcl::ModelCoefficients::ConstPtr target_plane_);
 
 private: 
+
+    pcl::PointXYZ GetCloudCentroid(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_); 
+
+    pcl::PointXYZ GetCloudCenter(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_);
+
+    void OffsetCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_, Eigen::Vector3d offset_);
 
     Eigen::Matrix3d LieAlgebraToR(const Eigen::Vector3d& eps);
 

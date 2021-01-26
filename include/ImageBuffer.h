@@ -70,7 +70,7 @@ public:
   /**
    * @brief Method for interpolating points in a feature point vector for a more dense outline of a feature - helps to converge minimization solution
    * @param points_ vector of feature points 
-   * @param density_index_ number of points to add btw each original labelled feature point
+   * @param density_index_ number of points to add for every ten pixels
    * @todo update to add interpolated points at equal intervals rather than at fractions of the length between labelled points 
    */
     void densifyPoints (std::vector<point>* points_, uint8_t density_index_);

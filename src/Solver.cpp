@@ -2,7 +2,8 @@
 
 namespace cam_cad {
 
-Solver::Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_, std::string config_file_name_) {
+Solver::Solver(std::shared_ptr<Visualizer> vis_, std::shared_ptr<Util> util_, 
+               std::string config_file_name_) {
     vis = vis_;
     util = util_;
 
@@ -19,9 +20,12 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
 
     bool has_converged = false;
     
-    pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_scaled (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr CAD_cloud_scaled 
+        (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud 
+        (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr proj_cloud 
+        (new pcl::PointCloud<pcl::PointXYZ>);
 
     // correspondence object tells the cost function which points to compare
     pcl::CorrespondencesPtr proj_corrs (new pcl::Correspondences); 
@@ -32,9 +36,11 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
         vis->startVis();
 
     // transform, project, and get correspondences
-    util->CorrEst(CAD_cloud_scaled, camera_cloud_, T_CS, proj_corrs);
+    util->CorrEst(CAD_cloud_scaled, camera_cloud_, T_CS, proj_corrs, offset_type_);
 
-    // transformed cloud is only for the visualizer, the actual ceres solution takes just the original CAD cloud and the iterative results 
+    // transformed cloud is only for the visualizer, 
+    //the actual ceres solution takes just the original 
+    //CAD cloud and the iterative results 
     trans_cloud = util->TransformCloud(CAD_cloud_scaled, T_CS);
 
     // project cloud for visualizer
@@ -58,7 +64,8 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
 
         if (visualize_)
         {
-            vis->displayClouds(camera_cloud_, trans_cloud, proj_cloud, proj_corrs, "camera_cloud", "transformed_cloud", "projected_cloud");
+            vis->displayClouds(camera_cloud_, trans_cloud, proj_cloud, proj_corrs, 
+                                "camera_cloud", "transformed_cloud", "projected_cloud");
 
             char end = ' ';
 
@@ -69,7 +76,8 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
             if (end == 'r') return false;
         }
 
-        BuildCeresProblem(problem, proj_corrs, camera_model, camera_cloud_, CAD_cloud_scaled);
+        BuildCeresProblem(problem, proj_corrs, camera_model, 
+                          camera_cloud_, CAD_cloud_scaled);
 
         SolveCeresProblem(problem, minimizer_progress_to_stdout_);
 
@@ -81,9 +89,10 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
         }
 
         // transform, project, and get correspondences
-        util->CorrEst(CAD_cloud_scaled, camera_cloud_, T_CS, proj_corrs);
+        util->CorrEst(CAD_cloud_scaled, camera_cloud_, T_CS, proj_corrs, offset_type_);
 
-        // update the position of the transformed cloud based on the upated transformation matrix for visualization
+        // update the position of the transformed cloud based on 
+        //the upated transformation matrix for visualization
         trans_cloud = util->TransformCloud(CAD_cloud_scaled, T_CS);
 
         // project cloud for visualizer
@@ -93,7 +102,8 @@ bool Solver::SolveOptimization (pcl::PointCloud<pcl::PointXYZ>::ConstPtr CAD_clo
         util->ScaleCloud(trans_cloud,(1/cloud_scale_));
 
         if (convergence_type_ == "pixel")
-            has_converged = CheckPixelConvergence(proj_cloud, camera_cloud_, proj_corrs, convergence_limit_);
+            has_converged = CheckPixelConvergence(proj_cloud, camera_cloud_, 
+                                                    proj_corrs, convergence_limit_);
 
     }
 
@@ -244,7 +254,8 @@ int Solver::GetSolutionIterations () {
     return solution_iterations_;
 }
 
-void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::CorrespondencesPtr corrs_,
+void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, 
+                          pcl::CorrespondencesPtr corrs_,
                           const std::shared_ptr<beam_calibration::CameraModel> camera_model_,
                           pcl::PointCloud<pcl::PointXYZ>::ConstPtr camera_cloud_,
                           pcl::PointCloud<pcl::PointXYZ>::ConstPtr cad_cloud_) {
@@ -253,7 +264,8 @@ void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::Co
                                 se3_parameterization_.get());
 
     for (int i = 0; i < corrs_->size(); i++) {
-        Eigen::Vector2d pixel (camera_cloud_->at(corrs_->at(i).index_match).x,camera_cloud_->at(corrs_->at(i).index_match).y);
+        Eigen::Vector2d pixel (camera_cloud_->at(corrs_->at(i).index_match).x,
+                                camera_cloud_->at(corrs_->at(i).index_match).y);
 
         Eigen::Vector3d P_STRUCT (cad_cloud_->at(corrs_->at(i).index_query).x,
                                   cad_cloud_->at(corrs_->at(i).index_query).y,
@@ -270,7 +282,8 @@ void Solver::BuildCeresProblem(std::shared_ptr<ceres::Problem>& problem, pcl::Co
     }
 }
 
-void Solver::SolveCeresProblem(const std::shared_ptr<ceres::Problem>& problem, bool output_results) {
+void Solver::SolveCeresProblem(const std::shared_ptr<ceres::Problem>& problem, 
+                                bool output_results) {
     ceres::Solver::Summary ceres_summary;
     ceres::Solve(ceres_solver_options_, problem.get(), &ceres_summary);
     if (output_results) {
@@ -281,8 +294,9 @@ void Solver::SolveCeresProblem(const std::shared_ptr<ceres::Problem>& problem, b
     }
 }
 
-bool Solver::CheckPixelConvergence(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
-                          pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_) {
+bool Solver::CheckPixelConvergence(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, 
+                                    pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
+                                    pcl::CorrespondencesPtr corrs_, uint16_t pixel_threshold_) {
 
   float pixel_error = 0;
     
@@ -336,6 +350,7 @@ void Solver::ReadSolutionParams(std::string file_name_) {
   cam_intrinsics_file_ = J["camera_intrinsics"];
   visualize_ = J["visualize"];
   convergence_type_ = J["convergence_type"];
+  offset_type_ = J["offset_type"];
 
 
   // Load default initial pose
@@ -355,8 +370,9 @@ void Solver::ReadSolutionParams(std::string file_name_) {
 
 }
 
-void Solver::SetInitialPixelError(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
-                          pcl::CorrespondencesPtr corrs_) {
+void Solver::SetInitialPixelError(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query_cloud_, 
+                                pcl::PointCloud<pcl::PointXYZ>::ConstPtr match_cloud_, 
+                                pcl::CorrespondencesPtr corrs_) {
     double pixel_error = 0;
     
     for (uint16_t i = 0; i < corrs_->size(); i++) {
@@ -364,8 +380,10 @@ void Solver::SetInitialPixelError(pcl::PointCloud<pcl::PointXYZ>::ConstPtr query
         uint16_t proj_point_index = corrs_->at(i).index_query;
         uint16_t cam_point_index = corrs_->at(i).index_match;
 
-        double error_x = query_cloud_->at(proj_point_index).x - match_cloud_->at(cam_point_index).x;
-        double error_y = query_cloud_->at(proj_point_index).y - match_cloud_->at(cam_point_index).y;
+        double error_x = query_cloud_->at(proj_point_index).x - 
+                            match_cloud_->at(cam_point_index).x;
+        double error_y = query_cloud_->at(proj_point_index).y - 
+                            match_cloud_->at(cam_point_index).y;
 
         pixel_error += sqrt(pow(error_x,2) + pow(error_y,2));
 

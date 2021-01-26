@@ -1,7 +1,7 @@
 {
-  "max_solution_iterations": 100,
-  "max_ceres_iterations": 5,
-  "convergence_limit": 8,
+  "max_solution_iterations": 50,
+  "max_ceres_iterations": 25,
+  "convergence_limit": 5,
   "initial_alpha": -90,
   "initial_beta": 0,
   "initial_gamma": 60,
@@ -10,12 +10,13 @@
   "initial_z": 80, 
   "cloud_scale": 0.01,
   "minimizer_progress_to_stdout": false,
-  "transform_progress_to_stdout": true,
+  "transform_progress_to_stdout": false,
   "max_solver_time_in_seconds": 1e6, 
   "function_tolerance": 1e-8,
   "gradient_tolerance": 1e-10, 
   "parameter_tolerance": 1e-8,
   "camera_intrinsics": "/home/cameron/projects/beam_robotics/beam_2DCAD_projection/config/Radtan_test.json", 
-  "visualize": true, 
-  "convergence_type": "pixel"
+  "visualize": false, 
+  "convergence_type": "pixel",
+  "offset_type": "centroid"
 }
