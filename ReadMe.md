@@ -8,6 +8,8 @@ This module provides a set of tools to transfer dimensional data for defects ide
   </video>
 </figure>
 
+![](/readme_images/convergence_test.mp4)
+
 ### inputs
 To transfer crack and other defect data, the structure surface outlines in both the camera image and CAD drawing must be provided to the module as labelled feature data in json format. An example labelled image file is provided in the config subdirectory of this project (example_input.json). This file was generated manually using the Slava labelling tool (https://github.com/Slava/label-tool). Only the outline of the surface corresponding to the CAD drawing should be outlined in the camera image. There is currently no utility in this module for automatically extracting these outlines from images and it must be done manually. An example labelled image is shown below.
 
