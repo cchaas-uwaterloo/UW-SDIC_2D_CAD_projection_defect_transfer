@@ -2,6 +2,8 @@
 ## Overview 
 This module provides a set of tools to transfer dimensional data for defects identified a camera image of a planar structure face to a corresponding orthographic CAD drawing of that structure surface. The camera image of the surface can be taken from any orientation, though an initial estimate of the camera pose relative to the structure surface, or the component transforms of this pose, must be provided. The accuracy of the transfer depenends on the accuracy of the inital camera pose estimate provided. 
 
+An animation of the pose estimation process:
+
 ![Alt Text](/readme_images/convergence_test.gif)
 
 ### inputs
